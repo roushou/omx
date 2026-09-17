@@ -1,0 +1,10 @@
+[package]
+name = "desktop-ui"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+omega = { workspace = true }

@@ -1,0 +1,15 @@
+[package]
+name = "workspaces"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+omega = { workspace = true }
+
+[dev-dependencies]
+omega-preview = { workspace = true }
+omega-proto = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt"] }

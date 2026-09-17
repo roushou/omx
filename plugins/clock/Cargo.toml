@@ -1,0 +1,15 @@
+[package]
+name = "clock"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+desktop-ui = { path = "../../crates/desktop-ui" }
+omega = { workspace = true }
+
+[dev-dependencies]
+omega-preview = { workspace = true }

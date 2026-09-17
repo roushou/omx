@@ -1,0 +1,31 @@
+# Dependency policy for the desktop configuration and its fixture tests.
+[graph]
+all-features = true
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+include-dev = true
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+
+# Workspace members are configuration crates, not registry publications.
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Local workspace dependencies intentionally have no registry version.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

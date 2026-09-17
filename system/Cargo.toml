@@ -1,0 +1,22 @@
+[package]
+name = "system"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+ai-usage = { path = "../plugins/ai-usage" }
+audio = { path = "../plugins/audio" }
+bluetooth = { path = "../plugins/bluetooth" }
+clock = { path = "../plugins/clock" }
+display = { path = "../plugins/display" }
+launcher = { path = "../plugins/launcher" }
+media = { path = "../plugins/media" }
+network = { path = "../plugins/network" }
+omega-document = { workspace = true }
+omega-omarchy = { workspace = true }
+power = { path = "../plugins/power" }
+system-monitor = { path = "../plugins/system-monitor" }
+workspaces = { path = "../plugins/workspaces" }
