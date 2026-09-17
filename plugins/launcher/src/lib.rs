@@ -370,27 +370,32 @@ impl Surface for Panel {
                     .render(),
             )
             .child(
-                Row::new()
-                    .gap(8)
+                Column::new()
+                    .gap(6)
+                    .child(Text::new("Search").size(Size::Title))
                     .child(
-                        // A fresh field on each opening restores search focus from any prior control.
-                        Field::new("Search")
-                            .size(Size::Title)
-                            .key(format!("query-{}", model.epoch))
-                            .fill_width()
-                            .autofocus()
-                            .placeholder("Name, category or keyword")
-                            .controlled(&model.query)
-                            .on_change(events.on(Message::Edited))
-                            .navigate("results")
-                            .disabled_if(model.busy()),
-                    )
-                    .child(
-                        Button::new("Clear")
-                            .key("clear")
-                            .secondary()
-                            .on_press(events.on(|()| Message::Clear))
-                            .disabled_if(model.busy() || model.query.text().is_empty()),
+                        Row::new()
+                            .gap(8)
+                            .child(
+                                // A fresh field on each opening restores search focus from any prior control.
+                                Field::new("")
+                                    .size(Size::Title)
+                                    .key(format!("query-{}", model.epoch))
+                                    .fill_width()
+                                    .autofocus()
+                                    .placeholder("Name, category or keyword")
+                                    .controlled(&model.query)
+                                    .on_change(events.on(Message::Edited))
+                                    .navigate("results")
+                                    .disabled_if(model.busy()),
+                            )
+                            .child(
+                                Button::new("Clear")
+                                    .key("clear")
+                                    .secondary()
+                                    .on_press(events.on(|()| Message::Clear))
+                                    .disabled_if(model.busy() || model.query.text().is_empty()),
+                            ),
                     ),
             )
             .child(
