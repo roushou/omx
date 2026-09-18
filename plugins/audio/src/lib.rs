@@ -134,6 +134,8 @@ impl Command for SetVolume {
     type Input = Percent;
     type Output = ();
 
+    const DESCRIPTION: &'static str = "Set the audio output volume";
+
     async fn call(&self, level: Percent) -> omega::Result<()> {
         if !self.audio.has_reading() {
             return Err(omega::Error::invalid("Audio unavailable"));
@@ -154,6 +156,8 @@ pub struct SetAudible {
 impl Command for SetAudible {
     type Input = bool;
     type Output = ();
+
+    const DESCRIPTION: &'static str = "Enable or mute the audio output";
 
     async fn call(&self, audible: bool) -> omega::Result<()> {
         if !self.audio.has_reading() {

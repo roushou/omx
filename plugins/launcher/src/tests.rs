@@ -35,8 +35,8 @@ impl Inspect {
     }
 }
 
-#[test]
-fn empty_and_unavailable_catalogues_are_distinct() {
+#[tokio::test]
+async fn empty_and_unavailable_catalogues_are_distinct() {
     for (state, text) in [
         (
             State::new().absent(SystemTopic::Applications),
@@ -47,7 +47,7 @@ fn empty_and_unavailable_catalogues_are_distinct() {
             "No installed applications",
         ),
     ] {
-        let drawn = Fixture::panel(&state).unwrap().draw();
+        let drawn = Fixture::panel(&state).await.unwrap().draw();
 
         assert!(drawn.text().contains(text));
         assert!(drawn.node("results").unwrap().children.is_empty());
@@ -56,9 +56,9 @@ fn empty_and_unavailable_catalogues_are_distinct() {
     assert!(!Drawn::of::<Indicator>(&State::new()).unwrap().is_empty());
 }
 
-#[test]
-fn search_matches_all_tokens_and_ranks_names_before_metadata() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn search_matches_all_tokens_and_ranks_names_before_metadata() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
 
     for (query, id) in [
         ("  FiLe  folder  ", "org.example.Files.desktop"),
@@ -74,7 +74,7 @@ fn search_matches_all_tokens_and_ranks_names_before_metadata() {
     Fixture::edit(&mut panel, "file web");
 
     assert!(Inspect::ids(&mut panel).is_empty());
-    assert!(panel.draw().text().contains("No matching applications"));
+    assert!(panel.draw().text().contains("No matching results"));
 
     let mut catalogue = Fixture::catalogue();
     catalogue.applications[0].keywords.push("terminal".into());
@@ -87,12 +87,14 @@ fn search_matches_all_tokens_and_ranks_names_before_metadata() {
     );
 }
 
-#[test]
-fn ordering_and_limits_are_stable_with_duplicate_labels() {
+#[tokio::test]
+async fn ordering_and_limits_are_stable_with_duplicate_labels() {
     let mut catalogue = Fixture::catalogue();
     catalogue.applications[0].name = "Same".into();
     catalogue.applications[1].name = "Same".into();
-    let mut panel = Fixture::panel(&State::new().with(catalogue.clone())).unwrap();
+    let mut panel = Fixture::panel(&State::new().with(catalogue.clone()))
+        .await
+        .unwrap();
     Fixture::edit(&mut panel, "same");
     let before = Inspect::ids(&mut panel);
     catalogue.applications.reverse();
@@ -105,16 +107,18 @@ fn ordering_and_limits_are_stable_with_duplicate_labels() {
         ..Default::default()
     }
     .write();
-    let mut limited = Fixture::configured(&Fixture::state(), &settings).unwrap();
+    let mut limited = Fixture::configured(&Fixture::state(), &settings)
+        .await
+        .unwrap();
 
     assert_eq!(Inspect::ids(&mut limited).len(), 1);
     assert!(limited.draw().text().contains("Showing 1 of 8"));
 }
 
-#[test]
-fn query_selection_and_clears_are_instance_local_and_revision_aware() {
-    let mut first = Fixture::panel(&Fixture::state()).unwrap();
-    let mut second = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn query_selection_and_clears_are_instance_local_and_revision_aware() {
+    let mut first = Fixture::panel(&Fixture::state()).await.unwrap();
+    let mut second = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut first, "files");
 
     assert_eq!(Inspect::ids(&mut first).len(), 1);
@@ -136,13 +140,13 @@ fn query_selection_and_clears_are_instance_local_and_revision_aware() {
         .interact(&drawn, "results", "select", Inspect::id())
         .unwrap();
 
-    assert_eq!(first.model().selected.as_ref(), Some(&Inspect::id()));
+    assert_eq!(first.model().selected.as_ref(), Some(&Inspect::id().into()));
     assert!(second.model().selected.is_none());
 }
 
-#[test]
-fn field_navigation_and_escape_bindings_are_declared() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn field_navigation_and_escape_bindings_are_declared() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     let drawn = panel.draw();
 
     assert_eq!(drawn.node("query-0").unwrap().navigation_target, "results");
@@ -164,9 +168,9 @@ fn field_navigation_and_escape_bindings_are_declared() {
 
 #[tokio::test]
 async fn activation_is_single_admission_then_hide() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Inspect::activate(&mut panel);
-    panel.send(Message::Activate(Inspect::id())).unwrap();
+    panel.send(Message::Activate(Inspect::id().into())).unwrap();
 
     assert!(panel.model().pending);
 
@@ -201,7 +205,7 @@ async fn activation_is_single_admission_then_hide() {
 
 #[tokio::test]
 async fn launch_refusal_is_visible_and_does_not_dismiss_or_retry() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut panel, "files");
     Inspect::activate(&mut panel);
     panel
@@ -220,9 +224,9 @@ async fn launch_refusal_is_visible_and_does_not_dismiss_or_retry() {
 
 #[tokio::test]
 async fn stale_and_filtered_targets_are_refused_before_activation() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut panel, "terminal");
-    panel.send(Message::Activate(Inspect::id())).unwrap();
+    panel.send(Message::Activate(Inspect::id().into())).unwrap();
 
     assert!(panel.take_effect().is_none());
 
@@ -230,7 +234,7 @@ async fn stale_and_filtered_targets_are_refused_before_activation() {
     let mut catalogue = Fixture::catalogue();
     catalogue.applications.remove(0);
     panel.state(&State::new().with(catalogue));
-    panel.send(Message::Activate(Inspect::id())).unwrap();
+    panel.send(Message::Activate(Inspect::id().into())).unwrap();
 
     assert!(
         panel
@@ -254,7 +258,7 @@ async fn stale_and_filtered_targets_are_refused_before_activation() {
 
 #[tokio::test]
 async fn late_admission_does_not_hide_a_reopened_panel() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Inspect::activate(&mut panel);
     panel.lifecycle(Lifecycle::Hidden).unwrap();
     panel.lifecycle(Lifecycle::Presented).unwrap();
@@ -265,12 +269,20 @@ async fn late_admission_does_not_hide_a_reopened_panel() {
     panel.complete().await.unwrap();
 
     assert!(!panel.model().pending);
+    panel
+        .take_effect()
+        .unwrap()
+        .commands()
+        .unwrap()
+        .complete()
+        .unwrap();
+    panel.complete().await.unwrap();
     assert!(panel.take_effect().is_none());
 }
 
 #[tokio::test]
 async fn escape_hides_only_this_instance_and_reports_a_refusal() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     panel.send(Message::Dismiss).unwrap();
     panel.send(Message::Dismiss).unwrap();
     let operation = panel
@@ -297,13 +309,13 @@ async fn escape_hides_only_this_instance_and_reports_a_refusal() {
     assert!(panel.take_effect().is_none());
 }
 
-#[test]
-fn hide_and_close_clear_the_query_and_selection() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn hide_and_close_clear_the_query_and_selection() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
 
     for lifecycle in [Lifecycle::Hidden, Lifecycle::Closed] {
         Fixture::edit(&mut panel, "files");
-        panel.send(Message::Selected(Inspect::id())).unwrap();
+        panel.send(Message::Selected(Inspect::id().into())).unwrap();
         panel.lifecycle(lifecycle).unwrap();
 
         assert!(panel.model().query.text().is_empty());
@@ -319,9 +331,9 @@ fn hide_and_close_clear_the_query_and_selection() {
     );
 }
 
-#[test]
-fn fuzzy_search_handles_subsequences_and_preserves_literal_priority() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn fuzzy_search_handles_subsequences_and_preserves_literal_priority() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut panel, "txted");
     assert_eq!(Inspect::ids(&mut panel), vec!["org.example.Editor.desktop"]);
     Fixture::edit(&mut panel, "trmnl");
@@ -338,9 +350,9 @@ fn fuzzy_search_handles_subsequences_and_preserves_literal_priority() {
     assert!(Inspect::ids(&mut panel).is_empty());
 }
 
-#[test]
-fn favorites_sort_alphabetically_before_other_apps_without_changing_search_relevance() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn favorites_sort_alphabetically_before_other_apps_without_changing_search_relevance() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::favorites(
         &mut panel,
         &[
@@ -372,7 +384,7 @@ fn favorites_sort_alphabetically_before_other_apps_without_changing_search_relev
 
 #[tokio::test]
 async fn favorite_button_inserts_only_the_selected_app_without_launching_or_dismissing() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut panel, "files");
     let drawn = panel.draw();
     panel.interact(&drawn, "favorite", "press", ()).unwrap();
@@ -388,7 +400,7 @@ async fn favorite_button_inserts_only_the_selected_app_without_launching_or_dism
 
 #[tokio::test]
 async fn favorite_save_failure_is_visible_without_retrying() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut panel, "files");
     panel.send(Message::ToggleFavorite).unwrap();
     panel
@@ -403,9 +415,9 @@ async fn favorite_save_failure_is_visible_without_retrying() {
     assert!(panel.take_effect().is_none());
 }
 
-#[test]
-fn search_keeps_results_height_and_footer_nodes_stable() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn search_keeps_results_height_and_footer_nodes_stable() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     let first = panel.draw();
     let height = first.node("results").unwrap().props.get("height").cloned();
     let keys: Vec<_> = first
@@ -438,8 +450,8 @@ fn search_keeps_results_height_and_footer_nodes_stable() {
     }
 }
 
-#[test]
-fn loading_favorites_disables_changes_but_leaves_search_available() {
+#[tokio::test]
+async fn loading_favorites_disables_changes_but_leaves_search_available() {
     let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
     assert_eq!(panel.draw().flag("favorite", "disabled"), Some(true));
     assert!(panel.draw().text().contains("Loading favorites"));
@@ -458,7 +470,7 @@ fn loading_favorites_disables_changes_but_leaves_search_available() {
 
 #[tokio::test]
 async fn favorite_removal_uses_the_entry_revision_and_reports_conflicts_without_retry() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::favorites(&mut panel, &["org.example.Files.desktop"]).unwrap();
     panel.send(Message::ToggleFavorite).unwrap();
     let read = panel.expect_storage_read::<Favorites>().await.unwrap();
@@ -487,6 +499,14 @@ async fn launch_does_not_depend_on_favorites_storage() {
             "storage offline",
         ))))
         .unwrap();
+    panel
+        .take_effect()
+        .unwrap()
+        .commands()
+        .unwrap()
+        .complete()
+        .unwrap();
+    panel.complete().await.unwrap();
     Inspect::activate(&mut panel);
     assert!(matches!(
         panel.complete_effect(Ok(None)).await.unwrap(),
@@ -501,10 +521,10 @@ async fn launch_does_not_depend_on_favorites_storage() {
     assert!(panel.take_effect().is_none());
 }
 
-#[test]
-fn snapshots_update_each_instance_without_resetting_its_query() {
-    let mut bar = Fixture::panel(&Fixture::state()).unwrap();
-    let mut overlay = Fixture::panel(&Fixture::state()).unwrap();
+#[tokio::test]
+async fn snapshots_update_each_instance_without_resetting_its_query() {
+    let mut bar = Fixture::panel(&Fixture::state()).await.unwrap();
+    let mut overlay = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::edit(&mut overlay, "files");
     Fixture::favorites(&mut bar, &["org.example.Terminal.desktop"]).unwrap();
     Fixture::favorites(&mut overlay, &["org.example.Terminal.desktop"]).unwrap();
@@ -515,7 +535,7 @@ fn snapshots_update_each_instance_without_resetting_its_query() {
 
 #[tokio::test]
 async fn removing_a_favorite_preserves_other_favorites_and_does_not_dismiss() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::favorites(
         &mut panel,
         &["org.example.Files.desktop", "org.example.Terminal.desktop"],
@@ -544,7 +564,7 @@ async fn removing_a_favorite_preserves_other_favorites_and_does_not_dismiss() {
 
 #[tokio::test]
 async fn removing_an_already_absent_favorite_finishes_without_a_write() {
-    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
     Fixture::favorites(&mut panel, &["org.example.Files.desktop"]).unwrap();
     panel.send(Message::ToggleFavorite).unwrap();
     panel
@@ -557,4 +577,106 @@ async fn removing_an_already_absent_favorite_finishes_without_a_write() {
     assert!(!panel.model().saving);
     assert!(panel.model().error.is_empty());
     assert!(panel.take_effect().is_none());
+}
+
+#[tokio::test]
+async fn discovered_actions_use_typed_calls_and_never_write_favorites() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
+    panel.lifecycle(Lifecycle::Presented).unwrap();
+    panel
+        .take_effect()
+        .unwrap()
+        .commands()
+        .unwrap()
+        .entry(audio::SetAudible, true)
+        .entry(audio::SetVolume, false)
+        .complete()
+        .unwrap();
+    panel.complete().await.unwrap();
+
+    Fixture::edit(&mut panel, "mute sound");
+    let mute = CandidateId::Action("audio/audible/false".into());
+    assert!(Inspect::ids(&mut panel).contains(&mute.to_string()));
+    assert!(
+        !Inspect::ids(&mut panel)
+            .iter()
+            .any(|id| id.contains("volume"))
+    );
+    panel.send(Message::Selected(mute.clone())).unwrap();
+    panel.send(Message::ToggleFavorite).unwrap();
+    assert!(panel.take_effect().is_none());
+
+    panel.send(Message::Activate(mute.clone())).unwrap();
+    panel.send(Message::Activate(mute)).unwrap();
+    let call = panel
+        .take_effect()
+        .unwrap()
+        .command::<audio::SetAudible>()
+        .unwrap();
+    assert!(!*call.input());
+    assert!(panel.take_effect().is_none());
+    call.complete(Ok(())).unwrap();
+    panel.complete().await.unwrap();
+    assert!(matches!(
+        panel.take_effect().unwrap().operation(),
+        Operation::ChangePresentation(_)
+    ));
+}
+
+#[tokio::test]
+async fn semantic_ranking_preserves_selection_and_ignores_stale_or_invented_results() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
+    Fixture::edit(&mut panel, "file");
+    let id = Inspect::id();
+    panel.send(Message::Selected(id.clone().into())).unwrap();
+    let epoch = panel.model().epoch;
+    panel
+        .send(Message::Ranked {
+            epoch,
+            query: "file".into(),
+            result: Ok(typesafe::Ranking {
+                model: "fixture".into(),
+                scores: [(id.to_string(), 1.9), ("invented".into(), 2.0)].into(),
+            }),
+        })
+        .unwrap();
+    assert_eq!(Inspect::ids(&mut panel), vec![id.to_string()]);
+    assert_eq!(panel.model().selected, Some(id.into()));
+    assert!(
+        panel.take_effect().is_none(),
+        "ranking does not execute a result"
+    );
+
+    Fixture::edit(&mut panel, "terminal");
+    panel
+        .send(Message::Ranked {
+            epoch,
+            query: "file".into(),
+            result: Err(omega::Error::invalid("old failure")),
+        })
+        .unwrap();
+    assert!(panel.model().error.is_empty());
+    assert!(panel.model().semantic.is_none());
+    assert_eq!(
+        Inspect::ids(&mut panel),
+        vec!["org.example.Terminal.desktop"]
+    );
+}
+
+#[tokio::test]
+async fn discovery_failure_keeps_application_search_available() {
+    let mut panel = Fixture::panel(&Fixture::state()).await.unwrap();
+    panel
+        .send(Message::CommandsLoaded {
+            epoch: panel.model().epoch,
+            result: Err(omega::Error::invalid("offline")),
+        })
+        .unwrap();
+    assert!(panel.draw().text().contains("Commands unavailable"));
+    Fixture::edit(&mut panel, "files");
+    assert_eq!(Inspect::ids(&mut panel), vec![Inspect::id().to_string()]);
+    assert!(
+        panel.draw().node("semantic-search").is_none(),
+        "remote evaluation is opt-in"
+    );
 }

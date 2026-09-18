@@ -7,8 +7,13 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+audio = { path = "../audio" }
+bluetooth = { path = "../bluetooth" }
 desktop-ui = { path = "../../crates/desktop-ui" }
+display = { path = "../display" }
+media = { path = "../media" }
 omega = { workspace = true }
+typesafe = { path = "../../crates/typesafe" }
 
 [dev-dependencies]
 omega-preview = { workspace = true }

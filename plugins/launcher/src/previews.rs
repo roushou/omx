@@ -7,7 +7,7 @@ fn preview() {
     Cases::new()
         .surface_with::<Panel>("standalone", || {
             use omega::config::Fields;
-            Fixture::configured(
+            Fixture::preview(
                 &Fixture::state(),
                 &Settings {
                     width: 552,
@@ -18,33 +18,41 @@ fn preview() {
             )
         })
         .surface::<Indicator>("bar", Fixture::state())
-        .surface_with::<Panel>("applications", || Fixture::panel(&Fixture::state()))
+        .surface_with::<Panel>("applications", || {
+            Fixture::preview(&Fixture::state(), &Default::default())
+        })
         .surface::<Panel>("favorites-loading", Fixture::state())
         .surface_with::<Panel>("favorites", || {
-            let mut panel = Fixture::panel(&Fixture::state())?;
+            let mut panel = Fixture::preview(&Fixture::state(), &Default::default())?;
             Fixture::favorites(&mut panel, &["org.example.Terminal.desktop"])?;
             Ok(panel)
         })
         .surface_with::<Panel>("fuzzy", || {
-            let mut panel = Fixture::panel(&Fixture::state())?;
+            let mut panel = Fixture::preview(&Fixture::state(), &Default::default())?;
             Fixture::edit(&mut panel, "txted");
             Ok(panel)
         })
         .surface_with::<Panel>("search", || {
-            let mut panel = Fixture::panel(&Fixture::state())?;
+            let mut panel = Fixture::preview(&Fixture::state(), &Default::default())?;
             Fixture::edit(&mut panel, "file");
             Ok(panel)
         })
         .surface_with::<Panel>("no-matches", || {
-            let mut panel = Fixture::panel(&Fixture::state())?;
+            let mut panel = Fixture::preview(&Fixture::state(), &Default::default())?;
             Fixture::edit(&mut panel, "unmatched query");
             Ok(panel)
         })
         .surface_with::<Panel>("empty", || {
-            Fixture::panel(&State::new().with(ApplicationsState::default()))
+            Fixture::preview(
+                &State::new().with(ApplicationsState::default()),
+                &Default::default(),
+            )
         })
         .surface_with::<Panel>("unavailable", || {
-            Fixture::panel(&State::new().absent(SystemTopic::Applications))
+            Fixture::preview(
+                &State::new().absent(SystemTopic::Applications),
+                &Default::default(),
+            )
         })
         .run()
         .unwrap();

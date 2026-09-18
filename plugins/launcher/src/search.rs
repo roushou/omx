@@ -1,15 +1,16 @@
 //! Deterministic local search over the platform's bounded catalogue.
 
-use omega::platform::applications::{Application, ApplicationId};
+use crate::candidates::{Candidate, CandidateId};
+use omega::platform::applications::ApplicationId;
 use std::collections::BTreeSet;
 
 pub(crate) struct Matches<'a> {
-    pub(crate) items: Vec<&'a Application>,
+    pub(crate) items: Vec<&'a Candidate>,
     pub(crate) total: usize,
 }
 
 impl Matches<'_> {
-    pub(crate) fn selected(&self, selected: Option<&ApplicationId>) -> Option<&Application> {
+    pub(crate) fn selected(&self, selected: Option<&CandidateId>) -> Option<&Candidate> {
         self.items
             .iter()
             .find(|app| Some(app.id()) == selected)
@@ -17,7 +18,7 @@ impl Matches<'_> {
             .or_else(|| self.items.first().copied())
     }
 
-    pub(crate) fn contains(&self, id: &ApplicationId) -> bool {
+    pub(crate) fn contains(&self, id: &CandidateId) -> bool {
         self.items.iter().any(|app| app.id() == id)
     }
 }
@@ -26,7 +27,7 @@ pub(crate) struct Search;
 
 impl Search {
     pub(crate) fn find<'a>(
-        entries: &'a [Application],
+        entries: &'a [Candidate],
         query: &str,
         limit: u8,
         favorites: &BTreeSet<ApplicationId>,
@@ -40,7 +41,7 @@ impl Search {
             let generic = app.generic_name().to_lowercase();
             let keywords = app.keywords().join(" ").to_lowercase();
             let description = app.description().to_lowercase();
-            let id = app.id().as_str().to_lowercase();
+            let id = app.id().to_string().to_lowercase();
             let mut score = 0usize;
             let mut matched = true;
 
@@ -73,7 +74,7 @@ impl Search {
                     2
                 };
 
-                let personal = query.is_empty() && !favorites.contains(app.id());
+                let personal = query.is_empty() && !app.is_favorite(favorites);
                 matches.push((priority, score, personal, name, app));
             }
         }
@@ -87,6 +88,35 @@ impl Search {
             .map(|(_, _, _, _, app)| app)
             .collect();
         Matches { items, total }
+    }
+
+    pub(crate) fn semantic<'a>(
+        entries: &'a [Candidate],
+        scores: &std::collections::BTreeMap<String, f64>,
+        limit: u8,
+    ) -> Matches<'a> {
+        let mut ranked = Vec::new();
+        for entry in entries {
+            if let Some(score) = scores.get(&entry.id().to_string())
+                && *score >= 1.0
+            {
+                ranked.push((*score, entry));
+            }
+        }
+        ranked.sort_by(|a, b| {
+            b.0.total_cmp(&a.0)
+                .then_with(|| a.1.name().cmp(b.1.name()))
+                .then_with(|| a.1.id().cmp(b.1.id()))
+        });
+        let total = ranked.len();
+        Matches {
+            items: ranked
+                .into_iter()
+                .take(usize::from(limit.clamp(1, 100)))
+                .map(|(_, entry)| entry)
+                .collect(),
+            total,
+        }
     }
 
     fn fuzzy(token: &str, name: &str) -> Option<usize> {

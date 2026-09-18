@@ -1,15 +1,15 @@
 # Launcher
 
-Search installed desktop applications and launch them from the bar. Click the
+Search installed applications and desktop actions from the bar. Click the
 magnifying glass beside the Omarchy menu, type a name, and press Enter.
 
 ## Keyboard controls
 
-| Key       | Action                          |
-| --------- | ------------------------------- |
-| Up / Down | Select a result                 |
-| Enter     | Launch the selected application |
-| Escape    | Close the panel                 |
+| Key       | Action                  |
+| --------- | ----------------------- |
+| Up / Down | Select a result         |
+| Enter     | Run the selected result |
+| Escape    | Close the panel         |
 
 You can also click a result. The search field receives focus when the panel opens,
 and **Clear** resets the query. Dismissing the panel resets search and selection.
@@ -18,7 +18,7 @@ To open a standalone launcher, for example from a compositor keybinding:
 
 ```sh
 omega present launcher panel --overlay --width 600 --height 700 --dismiss-on-outside \
-  --config '{"width":552,"visible_rows":7}'
+  --config '{"width":552,"visible-rows":7}'
 ```
 
 ## Replace the apps shortcut
@@ -28,7 +28,7 @@ menu; the main menu remains on Super+Space.
 
 ```lua
 hl.unbind("SUPER + ALT + SPACE")
-o.bind("SUPER + ALT + SPACE", "Omega applications", [[omega present launcher panel --overlay --dismiss-on-outside --width 600 --height 700 --config '{"width":552,"visible_rows":7}']])
+o.bind("SUPER + ALT + SPACE", "Omega applications", [[omega present launcher panel --overlay --dismiss-on-outside --width 600 --height 700 --config '{"width":552,"visible-rows":7}']])
 ```
 
 Run `hyprctl reload` and `hyprctl configerrors` after editing. Repeated invocations
@@ -61,13 +61,14 @@ omega storage show omx.launcher.favorites
 omega storage export omx.launcher.favorites > launcher-favorites.json
 ```
 
-This implementation currently requires the local storage-enabled Omega checkout;
+This implementation requires the local Omega checkout with storage and command interoperability;
 published Omega 0.3.9 does not provide this API.
 
 ## Configuration
 
 | Setting             | Default | Description                                         |
 | ------------------- | ------- | --------------------------------------------------- |
+| `semantic_search`   | `false` | Enable the explicit remote relevance-search button  |
 | `max_results`       | `40`    | Maximum results, clamped to 1–100                   |
 | `show_descriptions` | `true`  | Show category or description below each name        |
 | `width`             | `416`   | Content width in logical pixels, clamped to 320–800 |
@@ -121,3 +122,41 @@ cargo test -p launcher
 The [source](src/lib.rs) contains the stateful panel and activation handling.
 Previews use synthetic application entries and capture launch requests, so they
 won't open real applications. Use `omega preview launcher --list` for all cases.
+
+## Desktop actions
+
+The same results list includes mute/unmute, volume and brightness presets,
+play/pause/next for current media players, and connect/disconnect for known
+Bluetooth devices. Actions appear only when their command provider is available.
+The launcher refreshes command availability when opened; an action can still fail
+if its provider or device disappears before activation. Errors stay visible.
+
+Each action binds a typed command from another workspace plugin. Adding an action
+means adding its `Caller<C>` dependency and candidate in `src/candidates.rs`.
+`omega check` validates the dependency; no separate permissions file is needed.
+Favorites apply to applications only.
+
+## Optional semantic search
+
+Set `semantic_search: true` in `launcher::Settings` to show **Search by meaning**.
+For a standalone instance, add `"semantic-search":true` to its `--config` JSON.
+Provide `TYPESAFE_API_KEY` in the launcher process environment (inherited from the
+daemon); keep the credential out of this repository and the system document.
+
+Typing continues to use local fuzzy search. Pressing **Search by meaning** sends
+the query, application names/descriptions, and available action labels to
+[TypeSafe](https://docs.typesafe.ai/api). The pinned `jev-1.13.0` model scores
+already-defined candidates. Scores below 1 on the 0–2 rubric are hidden; remaining
+results sort by score, name, then ID. Scores are relevance estimates, not a promise
+that an action is correct. Review the selected result and press Enter to execute.
+
+Requests time out after three seconds and are never retried automatically.
+Editing invalidates pending results; errors preserve local search. The adapter
+caps requests at 256 candidates and 96 KiB, with a 1024-byte query limit. Oversized
+catalogues report an error instead of silently omitting candidates. Remote output
+cannot add commands, generate arguments, run shell text, or execute a result.
+
+`crates/typesafe` owns the HTTP boundary. Tests use fixed response fixtures and
+isolated Omega command completions; they do not contact TypeSafe or control the
+desktop. Live relevance and latency measurements require a separately configured
+key and have not been recorded yet.

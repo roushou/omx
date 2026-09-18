@@ -168,6 +168,8 @@ impl Command for SetBrightness {
     type Input = Percent;
     type Output = ();
 
+    const DESCRIPTION: &'static str = "Set the screen backlight brightness";
+
     async fn call(&self, level: Percent) -> omega::Result<()> {
         if !self.backlight.has_reading() {
             return Err(omega::Error::invalid("No supported backlight"));

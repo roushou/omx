@@ -217,6 +217,8 @@ impl Command for Connect {
     type Input = DeviceId;
     type Output = ();
 
+    const DESCRIPTION: &'static str = "Connect a known Bluetooth device";
+
     async fn call(&self, id: DeviceId) -> omega::Result<()> {
         let device = Devices::find(&self.bluetooth, &id)?;
 
@@ -245,6 +247,8 @@ pub struct Disconnect {
 impl Command for Disconnect {
     type Input = DeviceId;
     type Output = ();
+
+    const DESCRIPTION: &'static str = "Disconnect a Bluetooth device";
 
     async fn call(&self, id: DeviceId) -> omega::Result<()> {
         if !Devices::find(&self.bluetooth, &id)?.is_connected() {

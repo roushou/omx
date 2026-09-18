@@ -10,11 +10,20 @@ use omega::{
 pub(crate) struct Fixture;
 
 impl Fixture {
-    pub(crate) fn panel(state: &State) -> omega::Result<SurfaceHarness<Panel>> {
-        Self::configured(state, &Default::default())
+    pub(crate) async fn panel(state: &State) -> omega::Result<SurfaceHarness<Panel>> {
+        Self::configured(state, &Default::default()).await
     }
 
-    pub(crate) fn configured(
+    pub(crate) async fn configured(
+        state: &State,
+        settings: &omega::config::Values,
+    ) -> omega::Result<SurfaceHarness<Panel>> {
+        let mut panel = Self::preview(state, settings)?;
+        panel.complete().await?;
+        Ok(panel)
+    }
+
+    pub(crate) fn preview(
         state: &State,
         settings: &omega::config::Values,
     ) -> omega::Result<SurfaceHarness<Panel>> {
@@ -23,6 +32,11 @@ impl Fixture {
             .take_effect()
             .expect("initial subscription")
             .complete(Ok(None))?;
+        panel
+            .take_effect()
+            .expect("command catalogue")
+            .commands()?
+            .complete()?;
         Self::favorites(&mut panel, &[])?;
         Ok(panel)
     }

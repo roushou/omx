@@ -315,6 +315,8 @@ impl Command for Play {
     type Input = PlayerId;
     type Output = ();
 
+    const DESCRIPTION: &'static str = "Start playback in a media player";
+
     async fn call(&self, id: PlayerId) -> omega::Result<()> {
         let player = Players::find(&self.media, &id)?;
 
@@ -338,6 +340,8 @@ impl Command for Pause {
     type Input = PlayerId;
     type Output = ();
 
+    const DESCRIPTION: &'static str = "Pause a media player";
+
     async fn call(&self, id: PlayerId) -> omega::Result<()> {
         let player = Players::find(&self.media, &id)?;
 
@@ -360,6 +364,8 @@ pub struct Previous {
 impl Command for Previous {
     type Input = PlayerId;
     type Output = ();
+
+    const DESCRIPTION: &'static str = "Return to the previous track";
 
     async fn call(&self, id: PlayerId) -> omega::Result<()> {
         let player = Players::find(&self.media, &id)?;
@@ -385,6 +391,8 @@ pub struct Next {
 impl Command for Next {
     type Input = PlayerId;
     type Output = ();
+
+    const DESCRIPTION: &'static str = "Skip to the next track";
 
     async fn call(&self, id: PlayerId) -> omega::Result<()> {
         let player = Players::find(&self.media, &id)?;

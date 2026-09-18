@@ -2,7 +2,7 @@
 
 An [Omarchy](https://omarchy.org/) desktop configuration written in Rust with [Omega](https://github.com/roushou/omega).
 
-Eleven plugins cover application search, workspaces, a calendar, device controls,
+Eleven plugins cover an app and command launcher, workspaces, a calendar, device controls,
 media playback, system stats, and AI usage. Omarchy's menu and system tray stay
 in the bar. Layout and plugin settings live in Rust; colors and fonts follow your
 Omarchy theme.
@@ -66,19 +66,20 @@ Open the launcher as an overlay:
 
 ```sh
 omega present launcher panel --overlay --dismiss-on-outside --width 600 --height 700 \
-  --config '{"width":552,"visible_rows":7}'
+  --config '{"width":552,"visible-rows":7}'
 ```
 
-Type to search, use Up/Down to select, and press Enter to open an app. Escape or a
+Type to search apps and desktop actions, use Up/Down to select, and press Enter to run one. Escape or a
 click outside closes it. Favorites are shared with the bar panel
 and persist across daemon restarts.
 
 See the [launcher guide](plugins/launcher/README.md#replace-the-apps-shortcut)
 to bind it to Super+Alt+Space. Keybindings are configured separately from the bar.
 
-The launcher currently uses Omega's unreleased storage API. Development requires
-linking a storage-enabled Omega checkout with `omega link /path/to/omega` and
-running its daemon. Published Omega 0.3.9 cannot build this launcher yet.
+The launcher uses Omega's unreleased storage and command APIs. Development requires
+linking the matching Omega checkout with `omega link /path/to/omega` and
+running its daemon with protocol version 2. Rebuild plugins and reinstall the renderer
+when updating Omega. Published Omega 0.3.9 cannot build this launcher yet.
 
 ## Configuration
 
