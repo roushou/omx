@@ -1,5 +1,5 @@
 use super::{fixtures::Fixture, *};
-use omega::testing::{State, SurfaceHarness, SystemTopic, topic::ApplicationsState};
+use omega::testing::{State, SystemTopic, topic::ApplicationsState};
 use omega_preview::Cases;
 
 #[test]
@@ -7,7 +7,7 @@ fn preview() {
     Cases::new()
         .surface_with::<Panel>("standalone", || {
             use omega::config::Fields;
-            SurfaceHarness::configured(
+            Fixture::configured(
                 &Fixture::state(),
                 &Settings {
                     width: 552,
@@ -18,36 +18,34 @@ fn preview() {
             )
         })
         .surface::<Indicator>("bar", Fixture::state())
-        .surface::<Panel>("applications", Fixture::state())
+        .surface_with::<Panel>("applications", || Fixture::panel(&Fixture::state()))
+        .surface::<Panel>("favorites-loading", Fixture::state())
         .surface_with::<Panel>("favorites", || {
-            use omega::config::Fields;
-            use omega::record::PluginState;
-            let history = History {
-                favorites: vec!["org.example.Terminal.desktop".into()],
-                recent: vec!["org.example.Files.desktop".into()],
-            };
-            SurfaceHarness::new(&Fixture::state().keyspace(&History::address(), history.write()))
+            let mut panel = Fixture::panel(&Fixture::state())?;
+            Fixture::favorites(&mut panel, &["org.example.Terminal.desktop"])?;
+            Ok(panel)
         })
         .surface_with::<Panel>("fuzzy", || {
-            let mut panel = SurfaceHarness::new(&Fixture::state())?;
+            let mut panel = Fixture::panel(&Fixture::state())?;
             Fixture::edit(&mut panel, "txted");
             Ok(panel)
         })
         .surface_with::<Panel>("search", || {
-            let mut panel = SurfaceHarness::new(&Fixture::state())?;
+            let mut panel = Fixture::panel(&Fixture::state())?;
             Fixture::edit(&mut panel, "file");
             Ok(panel)
         })
         .surface_with::<Panel>("no-matches", || {
-            let mut panel = SurfaceHarness::new(&Fixture::state())?;
+            let mut panel = Fixture::panel(&Fixture::state())?;
             Fixture::edit(&mut panel, "unmatched query");
             Ok(panel)
         })
-        .surface::<Panel>("empty", State::new().with(ApplicationsState::default()))
-        .surface::<Panel>(
-            "unavailable",
-            State::new().absent(SystemTopic::Applications),
-        )
+        .surface_with::<Panel>("empty", || {
+            Fixture::panel(&State::new().with(ApplicationsState::default()))
+        })
+        .surface_with::<Panel>("unavailable", || {
+            Fixture::panel(&State::new().absent(SystemTopic::Applications))
+        })
         .run()
         .unwrap();
 }

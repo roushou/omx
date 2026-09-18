@@ -34,17 +34,35 @@ o.bind("SUPER + ALT + SPACE", "Omega applications", [[omega present launcher pan
 Run `hyprctl reload` and `hyprctl configerrors` after editing. Repeated invocations
 reuse the launcher instance; Escape or a click outside dismisses it.
 
-## Favorites and recent apps
+## Favorites
 
 Select an application and use **Add favorite** or **Remove favorite**. With an
-empty query, favorites appear first in the order added, then the 20 most recently
-opened apps, then the rest alphabetically. Removed applications are not displayed.
-A recent entry means the desktop service accepted the launch, not that the app
-finished starting. Refused launches do not enter the recent list.
+empty query, favorites appear first, followed by the remaining applications.
+Both groups are alphabetical. Typing searches the installed application catalogue
+and orders matches by relevance; favorites keep their star. Applications that
+are no longer installed are not displayed.
 
-Favorites and recents are shared by the bar and standalone launcher through an
-Omega record. They survive plugin restarts, but reset when the daemon restarts;
-there is no disk-backed history yet. Search and selection stay local to each view.
+Up to 32 favorites are shared by the bar and standalone launcher through Omega's
+persistent JSON storage. They survive plugin and daemon restarts. Search and
+selection stay local to each view.
+
+The store is `omx.launcher.favorites`. Each key is an application ID; its presence
+marks a favorite, and its value is `null`. Adding or removing a favorite changes
+only that application's entry. Removal checks the entry's revision, so a stale
+write cannot remove a concurrently replaced favorite. Save errors stay visible
+and are not retried automatically.
+
+While favorites are loading or unavailable, the panel disables favorite controls
+and shows a status message. Search and application launching remain available.
+Launching an application does not write to storage.
+
+```sh
+omega storage show omx.launcher.favorites
+omega storage export omx.launcher.favorites > launcher-favorites.json
+```
+
+This implementation currently requires the local storage-enabled Omega checkout;
+published Omega 0.3.9 does not provide this API.
 
 ## Configuration
 
@@ -80,11 +98,10 @@ localization. Installing or removing applications updates results automatically.
 Icons come from the desktop theme.
 
 The launcher opens desktop entries; it doesn't run typed shell commands. While a
-launch request is pending, repeated activation is disabled. After the desktop service accepts the launch, the panel records it in recent
-apps and hides. If recording history fails, the error stays visible and the
-application is not launched again. An application can still fail to start
-after that point. Reported failures remain visible, and requests are never
-retried automatically.
+launch request is pending, repeated activation is disabled. Once the desktop
+service accepts the launch, the panel hides. Acceptance does not guarantee that
+the application finished starting. Reported failures remain visible, and requests
+are never retried automatically.
 
 If the search field doesn't receive focus, check `omega status --versions` and
 install the renderer matching your CLI with `omega shell install`.
@@ -96,6 +113,7 @@ omega preview launcher --case applications
 omega preview launcher --case search
 omega preview launcher --case fuzzy
 omega preview launcher --case favorites
+omega preview launcher --case favorites-loading
 omega preview launcher --case no-matches
 cargo test -p launcher
 ```

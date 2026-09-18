@@ -1,7 +1,7 @@
 //! Deterministic local search over the platform's bounded catalogue.
 
-use crate::history::History;
 use omega::platform::applications::{Application, ApplicationId};
+use std::collections::BTreeSet;
 
 pub(crate) struct Matches<'a> {
     pub(crate) items: Vec<&'a Application>,
@@ -29,7 +29,7 @@ impl Search {
         entries: &'a [Application],
         query: &str,
         limit: u8,
-        history: &History,
+        favorites: &BTreeSet<ApplicationId>,
     ) -> Matches<'a> {
         let query = query.trim().to_lowercase();
         let tokens: Vec<_> = query.split_whitespace().collect();
@@ -73,11 +73,7 @@ impl Search {
                     2
                 };
 
-                let personal = if query.is_empty() {
-                    history.rank(app.id())
-                } else {
-                    (0, 0)
-                };
+                let personal = query.is_empty() && !favorites.contains(app.id());
                 matches.push((priority, score, personal, name, app));
             }
         }

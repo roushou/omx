@@ -122,13 +122,25 @@ are checked as well as bar attachments.
 If `OMARCHY_PATH` is set, it must point to an Omarchy installation containing
 `shell/Commons`. An invalid override prevents standalone theme initialization.
 
-## Launcher favorites or recent apps disappeared
+## Launcher favorites are missing or unavailable
 
-Launcher history lives in the Omega daemon, with no disk persistence. Restarting
-or upgrading the daemon clears it. Restarting only the launcher plugin preserves
-it. The bar popup and standalone overlay share history, but keep separate queries
-and selections. Recent apps are recorded after launch admission, not after the
-application reports that it opened successfully.
+Favorites persist across plugin and daemon restarts and are shared by the bar
+popup and standalone overlay. Search and selection belong to each instance.
+A favorite is shown only while its application is present in the installed
+catalogue; changing the desktop-entry ID makes it a different application.
+
+Inspect the saved IDs and any storage errors:
+
+```sh
+omega storage list
+omega storage show omx.launcher.favorites
+omega status launcher
+```
+
+The panel shows **Loading favorites…** or **Favorites unavailable** until its
+subscription is ready. Favorite controls are disabled during that time, but
+search and launching still work. Up to 32 favorites can be stored. Failed writes
+leave an error in the panel; they are not retried automatically.
 
 ## A reading is unavailable or a control is disabled
 

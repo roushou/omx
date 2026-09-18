@@ -68,13 +68,14 @@ Standalone presentations use Omega's renderer with the Omarchy theme adapter.
 
 ## Readings, state, and actions
 
-There are three common sources of data in these plugins:
+The plugins use these sources of data:
 
-| Kind            | Example                                       | Owner                        |
-| --------------- | --------------------------------------------- | ---------------------------- |
-| Service reading | Volume, Wi-Fi connection, focused workspace   | Omega's platform services    |
-| Panel model     | Calendar month, search query, selected player | One surface instance         |
-| Shared record   | AI usage snapshot, launcher history           | The plugin that publishes it |
+| Kind               | Example                                       | Owner                        |
+| ------------------ | --------------------------------------------- | ---------------------------- |
+| Service reading    | Volume, Wi-Fi connection, focused workspace   | Omega's platform services    |
+| Panel model        | Calendar month, search query, selected player | One surface instance         |
+| Shared record      | AI usage snapshot                             | The plugin that publishes it |
+| Persistent storage | Launcher favorites                            | Omega's storage service      |
 
 Surfaces implement Omega's `Surface` contract: a model, messages, effects, an
 `update` method, and a `render` method. Stateless indicators use `()` as their
@@ -115,17 +116,20 @@ new interaction. Plugin restart ends its current instances.
 The [launcher](../plugins/launcher/README.md) reads Omega's shared application
 catalogue. Each panel keeps its query, selection, and pending launch in its own
 model. Search ranks literal and fuzzy matches; with an empty query, favorites
-come first, followed by recent apps and alphabetical results.
+come first. Favorites and the remaining applications are each sorted
+alphabetically. Search relevance takes precedence when the query is nonempty.
 
-[History](../plugins/launcher/src/history.rs) holds favorite desktop IDs and the
-20 most recently admitted launches. Effects publish changes through
-`Own<History>`; panels read them through `Watch<History>`. Bar and standalone
-instances therefore share history without sharing their current search.
+[Favorites](../plugins/launcher/src/favorites.rs) declares a persistent JSON
+store keyed by typed application IDs, with a unit value for each favorite.
+`Store<Favorites>` inserts or removes individual entries;
+`Subscribed<AllFavorites>` supplies each panel's current snapshot. The subscription
+covers the store's 32-entry limit, so every favorite participates in ranking.
 
-These records live in the daemon. They survive plugin restarts but disappear when
-the daemon restarts. There is no history file. Successful launch admission adds a
-recent entry; it does not prove the application finished starting. After recording
-the launch, the panel requests dismissal only if it is still the same opening.
+Favorites survive plugin and daemon restarts. Loading and failed snapshots are
+visible in the panel, and favorite controls stay disabled until storage is ready.
+Search and launching remain usable without storage. A successful launch requests
+dismissal only if the panel is still in the same opening. Launches do not write
+to storage; acceptance does not prove the application finished starting.
 
 ## AI usage collection
 

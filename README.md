@@ -47,7 +47,7 @@ Click a bar indicator to open its panel. Workspace buttons switch directly.
 | Plugin                                             | What it does                                               |
 | -------------------------------------------------- | ---------------------------------------------------------- |
 | [Workspaces](plugins/workspaces/README.md)         | Switch numbered workspaces and see which have windows      |
-| [Launcher](plugins/launcher/README.md)             | Fuzzy app search, favorites, and recent apps               |
+| [Launcher](plugins/launcher/README.md)             | Fuzzy app search and persistent favorites                  |
 | [Clock](plugins/clock/README.md)                   | Local time and a keyboard-navigable calendar               |
 | [Network](plugins/network/README.md)               | Connect to Wi-Fi, view VPN status and interface traffic    |
 | [Audio](plugins/audio/README.md)                   | Adjust volume and mute the default output                  |
@@ -70,11 +70,15 @@ omega present launcher panel --overlay --dismiss-on-outside --width 600 --height
 ```
 
 Type to search, use Up/Down to select, and press Enter to open an app. Escape or a
-click outside closes it. Favorites and recent apps are shared with the bar panel
-and reset when the daemon restarts.
+click outside closes it. Favorites are shared with the bar panel
+and persist across daemon restarts.
 
 See the [launcher guide](plugins/launcher/README.md#replace-the-apps-shortcut)
 to bind it to Super+Alt+Space. Keybindings are configured separately from the bar.
+
+The launcher currently uses Omega's unreleased storage API. Development requires
+linking a storage-enabled Omega checkout with `omega link /path/to/omega` and
+running its daemon. Published Omega 0.3.9 cannot build this launcher yet.
 
 ## Configuration
 

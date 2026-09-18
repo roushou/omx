@@ -10,6 +10,50 @@ use omega::{
 pub(crate) struct Fixture;
 
 impl Fixture {
+    pub(crate) fn panel(state: &State) -> omega::Result<SurfaceHarness<Panel>> {
+        Self::configured(state, &Default::default())
+    }
+
+    pub(crate) fn configured(
+        state: &State,
+        settings: &omega::config::Values,
+    ) -> omega::Result<SurfaceHarness<Panel>> {
+        let mut panel = SurfaceHarness::configured(state, settings)?;
+        panel
+            .take_effect()
+            .expect("initial subscription")
+            .complete(Ok(None))?;
+        Self::favorites(&mut panel, &[])?;
+        Ok(panel)
+    }
+
+    pub(crate) fn favorites(panel: &mut SurfaceHarness<Panel>, ids: &[&str]) -> omega::Result<()> {
+        let mut snapshot =
+            omega::testing::Stored::<crate::favorites::Favorites>::new(omega::storage::Revision {
+                epoch: "a".repeat(32),
+                revision: 1,
+            })?;
+        for id in ids {
+            snapshot = snapshot.entry(id.parse().unwrap(), (), 1)?;
+        }
+        panel.storage(&snapshot)
+    }
+
+    pub(crate) fn revision(revision: u64) -> omega::storage::Revision {
+        omega::storage::Revision {
+            epoch: "a".repeat(32),
+            revision,
+        }
+    }
+
+    pub(crate) fn snapshot(ids: &[&str]) -> omega::testing::Stored<crate::favorites::Favorites> {
+        let mut snapshot = omega::testing::Stored::new(Self::revision(5)).unwrap();
+        for id in ids {
+            snapshot = snapshot.entry(id.parse().unwrap(), (), 4).unwrap();
+        }
+        snapshot
+    }
+
     pub(crate) fn catalogue() -> ApplicationsState {
         ApplicationsState {
             applications: vec![

@@ -1,10 +1,10 @@
 //! Search installed desktop applications and launch a selected entry.
 
-mod history;
+mod favorites;
 mod search;
 use desktop_ui::{ItemRow, PanelHeader};
-use history::History;
-use omega::record::{Own, Watch};
+use favorites::{AllFavorites, Favorites};
+use omega::storage::{Snapshot, Store, Subscribed};
 use omega::{
     Surface, View,
     keyboard::{Chord, Key, Keymap},
@@ -13,7 +13,7 @@ use omega::{
     ui::{Button, Column, Component, Field, Glyph, Icon, Image, List, Row, Size, Text},
 };
 use search::Search;
-use std::convert::Infallible;
+use std::{collections::BTreeSet, convert::Infallible, future::Future};
 
 /// Search presentation settings. Search state belongs to each panel instance.
 #[derive(Debug, Clone, omega::Config)]
@@ -62,6 +62,7 @@ pub struct Model {
     query: TextValue,
     selected: Option<ApplicationId>,
     pending: bool,
+    saving: bool,
     dismissing: bool,
     epoch: u64,
     error: String,
@@ -75,7 +76,7 @@ impl Model {
     }
 
     fn busy(&self) -> bool {
-        self.pending || self.dismissing
+        self.pending || self.saving || self.dismissing
     }
 }
 
@@ -87,14 +88,12 @@ pub enum Message {
     Activate(ApplicationId),
     Clear,
     ToggleFavorite,
-    Recorded {
+    FavoriteSaved {
         epoch: u64,
-        dismiss: bool,
         result: omega::Result<()>,
     },
     Dismiss,
     Launched {
-        id: ApplicationId,
         epoch: u64,
         result: omega::Result<()>,
     },
@@ -108,20 +107,57 @@ pub enum Message {
 #[derive(Debug, omega::Effects)]
 pub struct Effects {
     launcher: Launcher,
-    history: Own<History>,
+    favorites: Store<Favorites>,
     presentation: Presentation,
+}
+
+impl Effects {
+    fn add_favorite(
+        &self,
+        id: ApplicationId,
+    ) -> impl Future<Output = omega::Result<()>> + Send + 'static {
+        let favorites = self.favorites.clone();
+        async move {
+            favorites.insert(id, ()).await?;
+            Ok(())
+        }
+    }
+
+    fn remove_favorite(
+        &self,
+        id: ApplicationId,
+    ) -> impl Future<Output = omega::Result<()>> + Send + 'static {
+        let favorites = self.favorites.clone();
+        async move {
+            if let Some(entry) = favorites.get(&id).await? {
+                favorites.remove(id, entry.revision).await?;
+            }
+            Ok(())
+        }
+    }
 }
 
 /// Search, keyboard navigation, and application activation.
 #[derive(Debug, omega::Surface)]
 pub struct Panel {
     applications: Applications,
-    history: Watch<History>,
+    favorites: Subscribed<AllFavorites>,
     #[omega(config)]
     settings: Settings,
 }
 
 impl Panel {
+    fn favorites(&self) -> BTreeSet<ApplicationId> {
+        match self.favorites.snapshot() {
+            Snapshot::Ready(page) => page
+                .entries()
+                .iter()
+                .map(|entry| entry.key.clone())
+                .collect(),
+            Snapshot::Loading | Snapshot::Failed(_) => BTreeSet::new(),
+        }
+    }
+
     fn dismiss(model: &mut Model, effects: &Effects) -> Task<Message> {
         if model.dismissing {
             return Task::none();
@@ -134,7 +170,7 @@ impl Panel {
         })
     }
 
-    fn row(app: &Application, descriptions: bool, history: &History) -> View {
+    fn row(app: &Application, descriptions: bool, favorites: &BTreeSet<ApplicationId>) -> View {
         let icon: View = if app.icon().is_empty() {
             Icon::new(Glyph::Search).size(Size::Title).into()
         } else {
@@ -153,10 +189,8 @@ impl Panel {
             row = row.subtitle(Text::new(description).size(Size::Body).muted());
         }
 
-        if history.favorite(app.id()) {
+        if favorites.contains(app.id()) {
             row = row.trailing(Text::new("★").tooltip("Favorite"));
-        } else if history.recent.iter().any(|id| id == app.id().as_str()) {
-            row = row.trailing(Text::new("Recent").size(Size::Body).muted());
         } else if app.is_terminal() {
             row = row.trailing(Icon::new(Glyph::Terminal).tooltip("Runs in a terminal"));
         }
@@ -171,6 +205,10 @@ impl Surface for Panel {
     type Model = Model;
     type Message = Message;
     type Effects = Effects;
+
+    fn initialize(&mut self, _: &mut Model) -> omega::Result<()> {
+        self.favorites.start(AllFavorites)
+    }
 
     fn update(&self, model: &mut Model, message: Message, effects: &Effects) -> Task<Message> {
         match message {
@@ -189,7 +227,7 @@ impl Surface for Panel {
                         &entries,
                         model.query.text(),
                         self.settings.max_results,
-                        &self.history.get(),
+                        &self.favorites(),
                     )
                     .contains(&id)
                     {
@@ -209,7 +247,7 @@ impl Surface for Panel {
                     &entries,
                     model.query.text(),
                     self.settings.max_results,
-                    &self.history.get(),
+                    &self.favorites(),
                 )
                 .contains(&id)
                 {
@@ -222,11 +260,7 @@ impl Surface for Panel {
                 model.selected = Some(id.clone());
                 let epoch = model.epoch;
                 return Task::perform(effects.launcher.launch(&id), move |result| {
-                    Message::Launched {
-                        id: id.clone(),
-                        epoch,
-                        result,
-                    }
+                    Message::Launched { epoch, result }
                 });
             }
 
@@ -237,25 +271,20 @@ impl Surface for Panel {
             }
 
             Message::Dismiss => return Self::dismiss(model, effects),
-            Message::Launched { id, epoch, result } => match result {
-                Ok(()) => {
-                    let publication = effects.history.update(|history| history.launched(&id));
-                    return Task::perform(publication, move |result| Message::Recorded {
-                        epoch,
-                        dismiss: true,
-                        result,
-                    });
+            Message::Launched { epoch, result } => {
+                model.pending = false;
+                if epoch != model.epoch {
+                    return Task::none();
                 }
-                Err(error) => {
-                    model.pending = false;
-                    if epoch == model.epoch {
-                        model.error = error.to_string();
-                    }
+
+                match result {
+                    Ok(()) => return Self::dismiss(model, effects),
+                    Err(error) => model.error = error.to_string(),
                 }
-            },
+            }
 
             Message::ToggleFavorite => {
-                if model.busy() {
+                if model.busy() || !matches!(self.favorites.snapshot(), Snapshot::Ready(_)) {
                     return Task::none();
                 }
                 let entries = self.applications.entries().unwrap_or_default();
@@ -263,37 +292,28 @@ impl Surface for Panel {
                     &entries,
                     model.query.text(),
                     self.settings.max_results,
-                    &self.history.get(),
+                    &self.favorites(),
                 );
                 if let Some(app) = matches.selected(model.selected.as_ref()) {
                     model.selected = Some(app.id().clone());
-                    let publication = effects.history.update(|history| history.toggle(app.id()));
+                    model.saving = true;
+                    model.error.clear();
                     let epoch = model.epoch;
-                    return Task::perform(publication, move |result| Message::Recorded {
-                        epoch,
-                        dismiss: false,
-                        result,
-                    });
+                    let completed = move |result| Message::FavoriteSaved { epoch, result };
+                    return if self.favorites().contains(app.id()) {
+                        Task::perform(effects.remove_favorite(app.id().clone()), completed)
+                    } else {
+                        Task::perform(effects.add_favorite(app.id().clone()), completed)
+                    };
                 }
             }
 
-            Message::Recorded {
-                epoch,
-                dismiss,
-                result,
-            } => {
-                if dismiss {
-                    model.pending = false;
-                }
-                if epoch != model.epoch {
-                    return Task::none();
-                }
-                match result {
-                    Ok(()) if dismiss => return Self::dismiss(model, effects),
-                    Ok(()) => {}
-                    Err(error) => {
-                        model.error = format!("Could not retain launcher history: {error}")
-                    }
+            Message::FavoriteSaved { epoch, result } => {
+                model.saving = false;
+                if epoch == model.epoch
+                    && let Err(error) = result
+                {
+                    model.error = format!("Could not save favorite: {error}");
                 }
             }
 
@@ -325,6 +345,7 @@ impl Surface for Panel {
                 model.clear();
                 model.dismissing = false;
                 model.pending = false;
+                model.saving = false;
             }
         }
 
@@ -333,12 +354,12 @@ impl Surface for Panel {
 
     fn render(&self, model: &Model, events: &Events<Message>) -> View {
         let entries = self.applications.entries();
-        let history = self.history.get();
+        let favorites = self.favorites();
         let matches = Search::find(
             entries.as_deref().unwrap_or_default(),
             model.query.text(),
             self.settings.max_results,
-            &history,
+            &favorites,
         );
 
         let selected = matches
@@ -347,6 +368,8 @@ impl Surface for Panel {
             .unwrap_or_default();
         let status = if model.pending {
             "Opening application…".into()
+        } else if model.saving {
+            "Saving favorite…".into()
         } else if model.dismissing {
             "Closing…".into()
         } else {
@@ -356,72 +379,70 @@ impl Surface for Panel {
             }
         };
 
-        let mut panel = Column::new()
-            .width(self.settings.width.clamp(320, 800))
-            .gap(12)
-            .shortcuts(Keymap::single(
-                Chord::new(Key::Escape),
-                events.on(|()| Message::Dismiss),
-            ))
-            .child(
-                PanelHeader::new(Text::new("Applications").size(Size::Heading).bold())
-                    .subtitle(Text::new(&status).size(Size::Body).muted())
-                    .leading(Icon::new(Glyph::Search).size(Size::Display))
-                    .render(),
-            )
-            .child(
-                Column::new()
-                    .gap(6)
-                    .child(Text::new("Search").size(Size::Title))
-                    .child(
-                        Row::new()
-                            .gap(8)
-                            .child(
-                                // A fresh field on each opening restores search focus from any prior control.
-                                Field::new("")
-                                    .size(Size::Title)
-                                    .key(format!("query-{}", model.epoch))
-                                    .fill_width()
-                                    .autofocus()
-                                    .placeholder("Name, category or keyword")
-                                    .controlled(&model.query)
-                                    .on_change(events.on(Message::Edited))
-                                    .navigate("results")
-                                    .disabled_if(model.busy()),
-                            )
-                            .child(
-                                Button::new("Clear")
-                                    .key("clear")
-                                    .secondary()
-                                    .on_press(events.on(|()| Message::Clear))
-                                    .disabled_if(model.busy() || model.query.text().is_empty()),
-                            ),
-                    ),
-            )
-            .child(
-                List::new()
-                    .id("results")
-                    .key("results")
-                    .gap(2)
-                    .selected(selected)
-                    .height(
-                        u32::from(self.settings.visible_rows.clamp(3, 10))
-                            * if self.settings.show_descriptions {
-                                54
-                            } else {
-                                38
-                            },
-                    )
-                    .disabled_if(model.busy())
-                    .on_select(events.on(Message::Selected))
-                    .on_activate(events.on(Message::Activate))
-                    .children(
-                        matches
-                            .items
-                            .iter()
-                            .map(|app| Self::row(app, self.settings.show_descriptions, &history)),
-                    ),
-            );
+        let mut panel =
+            Column::new()
+                .width(self.settings.width.clamp(320, 800))
+                .gap(12)
+                .shortcuts(Keymap::single(
+                    Chord::new(Key::Escape),
+                    events.on(|()| Message::Dismiss),
+                ))
+                .child(
+                    PanelHeader::new(Text::new("Applications").size(Size::Heading).bold())
+                        .subtitle(Text::new(&status).size(Size::Body).muted())
+                        .leading(Icon::new(Glyph::Search).size(Size::Display))
+                        .render(),
+                )
+                .child(
+                    Column::new()
+                        .gap(6)
+                        .child(Text::new("Search").size(Size::Title))
+                        .child(
+                            Row::new()
+                                .gap(8)
+                                .child(
+                                    // A fresh field on each opening restores search focus from any prior control.
+                                    Field::new("")
+                                        .size(Size::Title)
+                                        .key(format!("query-{}", model.epoch))
+                                        .fill_width()
+                                        .autofocus()
+                                        .placeholder("Name, category or keyword")
+                                        .controlled(&model.query)
+                                        .on_change(events.on(Message::Edited))
+                                        .navigate("results")
+                                        .disabled_if(model.busy()),
+                                )
+                                .child(
+                                    Button::new("Clear")
+                                        .key("clear")
+                                        .secondary()
+                                        .on_press(events.on(|()| Message::Clear))
+                                        .disabled_if(model.busy() || model.query.text().is_empty()),
+                                ),
+                        ),
+                )
+                .child(
+                    List::new()
+                        .id("results")
+                        .key("results")
+                        .gap(2)
+                        .selected(selected)
+                        .height(
+                            u32::from(self.settings.visible_rows.clamp(3, 10))
+                                * if self.settings.show_descriptions {
+                                    54
+                                } else {
+                                    38
+                                },
+                        )
+                        .disabled_if(model.busy())
+                        .on_select(events.on(Message::Selected))
+                        .on_activate(events.on(Message::Activate))
+                        .children(matches.items.iter().map(|app| {
+                            Self::row(app, self.settings.show_descriptions, &favorites)
+                        })),
+                );
 
         let selected_app = matches.selected(model.selected.as_ref());
 
@@ -438,14 +459,22 @@ impl Surface for Panel {
                 matches.total
             )
         } else if model.query.text().trim().is_empty() {
-            "Favorites · Recent · All applications".into()
+            "Favorites · All applications".into()
         } else {
             format!("{} matches", matches.total)
         };
-        let status_text = if model.error.is_empty() {
-            Text::new(&summary).muted()
-        } else {
+        let favorites_state = self.favorites.snapshot();
+        let favorites_ready = matches!(favorites_state, Snapshot::Ready(_));
+        let status_text = if !model.error.is_empty() {
             Text::new(&model.error).tooltip(&model.error).warning()
+        } else {
+            match &favorites_state {
+                Snapshot::Loading => Text::new("Loading favorites…").muted(),
+                Snapshot::Failed(error) => {
+                    Text::new("Favorites unavailable").tooltip(error).warning()
+                }
+                Snapshot::Ready(_) => Text::new(&summary).muted(),
+            }
         };
         panel = panel.child(
             Row::new()
@@ -461,7 +490,7 @@ impl Surface for Panel {
                 )
                 .child(
                     Button::new(
-                        if selected_app.is_some_and(|app| history.favorite(app.id())) {
+                        if selected_app.is_some_and(|app| favorites.contains(app.id())) {
                             "Remove favorite"
                         } else {
                             "Add favorite"
@@ -470,7 +499,7 @@ impl Surface for Panel {
                     .key("favorite")
                     .width(144)
                     .secondary()
-                    .disabled_if(model.busy() || selected_app.is_none())
+                    .disabled_if(model.busy() || !favorites_ready || selected_app.is_none())
                     .on_press(events.on(|()| Message::ToggleFavorite)),
                 ),
         );

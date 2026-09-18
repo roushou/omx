@@ -4,7 +4,7 @@ use omega::{
     effect::EffectError,
     testing::{
         Drawn, State, SurfaceHarness, SystemTopic, manifest_of,
-        operation::{Action, Operation, PresentationAction, Refusal},
+        operation::{Action, ErrorCode, Operation, PresentationAction, Refusal},
         topic::ApplicationsState,
     },
 };
@@ -47,7 +47,7 @@ fn empty_and_unavailable_catalogues_are_distinct() {
             "No installed applications",
         ),
     ] {
-        let drawn = Drawn::of::<Panel>(&state).unwrap();
+        let drawn = Fixture::panel(&state).unwrap().draw();
 
         assert!(drawn.text().contains(text));
         assert!(drawn.node("results").unwrap().children.is_empty());
@@ -58,7 +58,7 @@ fn empty_and_unavailable_catalogues_are_distinct() {
 
 #[test]
 fn search_matches_all_tokens_and_ranks_names_before_metadata() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
 
     for (query, id) in [
         ("  FiLe  folder  ", "org.example.Files.desktop"),
@@ -92,7 +92,7 @@ fn ordering_and_limits_are_stable_with_duplicate_labels() {
     let mut catalogue = Fixture::catalogue();
     catalogue.applications[0].name = "Same".into();
     catalogue.applications[1].name = "Same".into();
-    let mut panel = SurfaceHarness::<Panel>::new(&State::new().with(catalogue.clone())).unwrap();
+    let mut panel = Fixture::panel(&State::new().with(catalogue.clone())).unwrap();
     Fixture::edit(&mut panel, "same");
     let before = Inspect::ids(&mut panel);
     catalogue.applications.reverse();
@@ -105,7 +105,7 @@ fn ordering_and_limits_are_stable_with_duplicate_labels() {
         ..Default::default()
     }
     .write();
-    let mut limited = SurfaceHarness::<Panel>::configured(&Fixture::state(), &settings).unwrap();
+    let mut limited = Fixture::configured(&Fixture::state(), &settings).unwrap();
 
     assert_eq!(Inspect::ids(&mut limited).len(), 1);
     assert!(limited.draw().text().contains("Showing 1 of 8"));
@@ -113,8 +113,8 @@ fn ordering_and_limits_are_stable_with_duplicate_labels() {
 
 #[test]
 fn query_selection_and_clears_are_instance_local_and_revision_aware() {
-    let mut first = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
-    let mut second = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut first = Fixture::panel(&Fixture::state()).unwrap();
+    let mut second = Fixture::panel(&Fixture::state()).unwrap();
     Fixture::edit(&mut first, "files");
 
     assert_eq!(Inspect::ids(&mut first).len(), 1);
@@ -142,7 +142,7 @@ fn query_selection_and_clears_are_instance_local_and_revision_aware() {
 
 #[test]
 fn field_navigation_and_escape_bindings_are_declared() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     let drawn = panel.draw();
 
     assert_eq!(drawn.node("query-0").unwrap().navigation_target, "results");
@@ -164,7 +164,7 @@ fn field_navigation_and_escape_bindings_are_declared() {
 
 #[tokio::test]
 async fn activation_is_single_admission_then_hide() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Inspect::activate(&mut panel);
     panel.send(Message::Activate(Inspect::id())).unwrap();
 
@@ -187,10 +187,6 @@ async fn activation_is_single_admission_then_hide() {
     assert!(panel.take_effect().is_none());
 
     panel.complete().await.unwrap();
-    let recorded = panel.complete_effect(Ok(None)).await.unwrap();
-    assert!(matches!(recorded, Operation::SetState(_)));
-    assert!(panel.model().pending);
-    panel.complete().await.unwrap();
     let hide = panel.complete_effect(Ok(None)).await.unwrap();
 
     assert!(matches!(
@@ -205,7 +201,7 @@ async fn activation_is_single_admission_then_hide() {
 
 #[tokio::test]
 async fn launch_refusal_is_visible_and_does_not_dismiss_or_retry() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Fixture::edit(&mut panel, "files");
     Inspect::activate(&mut panel);
     panel
@@ -224,7 +220,7 @@ async fn launch_refusal_is_visible_and_does_not_dismiss_or_retry() {
 
 #[tokio::test]
 async fn stale_and_filtered_targets_are_refused_before_activation() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Fixture::edit(&mut panel, "terminal");
     panel.send(Message::Activate(Inspect::id())).unwrap();
 
@@ -258,7 +254,7 @@ async fn stale_and_filtered_targets_are_refused_before_activation() {
 
 #[tokio::test]
 async fn late_admission_does_not_hide_a_reopened_panel() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Inspect::activate(&mut panel);
     panel.lifecycle(Lifecycle::Hidden).unwrap();
     panel.lifecycle(Lifecycle::Presented).unwrap();
@@ -268,16 +264,13 @@ async fn late_admission_does_not_hide_a_reopened_panel() {
     panel.complete_effect(Ok(None)).await.unwrap();
     panel.complete().await.unwrap();
 
-    let recorded = panel.complete_effect(Ok(None)).await.unwrap();
-    assert!(matches!(recorded, Operation::SetState(_)));
-    panel.complete().await.unwrap();
     assert!(!panel.model().pending);
     assert!(panel.take_effect().is_none());
 }
 
 #[tokio::test]
 async fn escape_hides_only_this_instance_and_reports_a_refusal() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     panel.send(Message::Dismiss).unwrap();
     panel.send(Message::Dismiss).unwrap();
     let operation = panel
@@ -306,7 +299,7 @@ async fn escape_hides_only_this_instance_and_reports_a_refusal() {
 
 #[test]
 fn hide_and_close_clear_the_query_and_selection() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
 
     for lifecycle in [Lifecycle::Hidden, Lifecycle::Closed] {
         Fixture::edit(&mut panel, "files");
@@ -321,7 +314,6 @@ fn hide_and_close_clear_the_query_and_selection() {
         manifest_of(&plugin()).granted().unwrap(),
         vec![
             omega::internal::Capability::StateRead,
-            omega::internal::Capability::StateWrite,
             omega::internal::Capability::Spawn
         ]
     );
@@ -329,7 +321,7 @@ fn hide_and_close_clear_the_query_and_selection() {
 
 #[test]
 fn fuzzy_search_handles_subsequences_and_preserves_literal_priority() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Fixture::edit(&mut panel, "txted");
     assert_eq!(Inspect::ids(&mut panel), vec!["org.example.Editor.desktop"]);
     Fixture::edit(&mut panel, "trmnl");
@@ -347,75 +339,73 @@ fn fuzzy_search_handles_subsequences_and_preserves_literal_priority() {
 }
 
 #[test]
-fn history_orders_favorites_then_recents_and_bounds_admissions() {
-    use omega::record::PluginState;
-    let mut history = History::default();
-    let files = Inspect::id();
-    let terminal = ApplicationId::try_from("org.example.Terminal.desktop").unwrap();
-    history.launched(&files);
-    history.launched(&terminal);
-    history.launched(&files);
+fn favorites_sort_alphabetically_before_other_apps_without_changing_search_relevance() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::favorites(
+        &mut panel,
+        &[
+            "org.example.Terminal.desktop",
+            "org.example.Files.desktop",
+            "removed.desktop",
+        ],
+    )
+    .unwrap();
     assert_eq!(
-        history.recent,
-        vec![files.to_string(), terminal.to_string()]
+        &Inspect::ids(&mut panel)[..3],
+        &[
+            "org.example.Files.desktop",
+            "org.example.Terminal.desktop",
+            "org.example.Browser.desktop",
+        ]
     );
-    history.toggle(&terminal);
-    let state = Fixture::state().keyspace(&History::address(), history.write());
-    let mut panel = SurfaceHarness::<Panel>::new(&state).unwrap();
+    assert_eq!(Inspect::ids(&mut panel).len(), 8);
+
+    let mut catalogue = Fixture::catalogue();
+    catalogue.applications[0].keywords.push("terminal".into());
+    panel.state(&State::new().with(catalogue));
+    Fixture::edit(&mut panel, "terminal");
     assert_eq!(
-        &Inspect::ids(&mut panel)[..2],
-        &[terminal.to_string(), files.to_string()]
+        Inspect::ids(&mut panel),
+        vec!["org.example.Terminal.desktop", "org.example.Files.desktop",]
     );
-    Fixture::edit(&mut panel, "files");
-    assert_eq!(Inspect::ids(&mut panel)[0], files.to_string());
-    history.toggle(&terminal);
-    assert!(!history.favorite(&terminal));
-    for i in 0..30 {
-        history.launched(&ApplicationId::try_from(format!("app-{i}.desktop")).unwrap());
-    }
-    assert_eq!(history.recent.len(), 20);
-    assert_eq!(history.recent[0], "app-29.desktop");
 }
 
 #[tokio::test]
-async fn favorite_button_publishes_without_launching_or_dismissing() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+async fn favorite_button_inserts_only_the_selected_app_without_launching_or_dismissing() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     Fixture::edit(&mut panel, "files");
     let drawn = panel.draw();
     panel.interact(&drawn, "favorite", "press", ()).unwrap();
-    let operation = panel.complete_effect(Ok(None)).await.unwrap();
-    assert!(matches!(operation, Operation::SetState(_)));
+    assert!(panel.model().saving);
+    let insert = panel.expect_storage_insert::<Favorites>().await.unwrap();
+    assert_eq!(insert.key(), &Inspect::id());
+    assert_eq!(insert.value(), &());
+    insert.succeed(Fixture::revision(5)).unwrap();
     panel.complete().await.unwrap();
+    assert!(!panel.model().saving);
     assert!(panel.take_effect().is_none());
 }
 
 #[tokio::test]
-async fn history_failure_is_visible_without_replaying_the_launch() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
-    Inspect::activate(&mut panel);
-    panel.complete_effect(Ok(None)).await.unwrap();
-    panel.complete().await.unwrap();
-    panel.send(Message::Activate(Inspect::id())).unwrap();
+async fn favorite_save_failure_is_visible_without_retrying() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::edit(&mut panel, "files");
+    panel.send(Message::ToggleFavorite).unwrap();
     panel
-        .complete_effect(Err(EffectError::Refused(Refusal::unavailable(
-            "record refused",
-        ))))
+        .expect_storage_insert::<Favorites>()
         .await
+        .unwrap()
+        .refuse(Refusal::unavailable("save refused"))
         .unwrap();
     panel.complete().await.unwrap();
-    assert!(!panel.model().pending);
-    assert!(
-        panel
-            .draw()
-            .text()
-            .contains("Could not retain launcher history")
-    );
+    assert!(!panel.model().saving);
+    assert!(panel.draw().text().contains("Could not save favorite"));
     assert!(panel.take_effect().is_none());
 }
 
 #[test]
 fn search_keeps_results_height_and_footer_nodes_stable() {
-    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
     let first = panel.draw();
     let height = first.node("results").unwrap().props.get("height").cloned();
     let keys: Vec<_> = first
@@ -446,4 +436,125 @@ fn search_keeps_results_height_and_footer_nodes_stable() {
         assert_eq!(current, keys);
         assert_eq!(drawn.flag("favorite", "disabled"), Some(query == "zzzz"));
     }
+}
+
+#[test]
+fn loading_favorites_disables_changes_but_leaves_search_available() {
+    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    assert_eq!(panel.draw().flag("favorite", "disabled"), Some(true));
+    assert!(panel.draw().text().contains("Loading favorites"));
+    Fixture::edit(&mut panel, "files");
+    assert_eq!(Inspect::ids(&mut panel), vec![Inspect::id().to_string()]);
+    panel
+        .take_effect()
+        .unwrap()
+        .complete(Err(EffectError::Refused(Refusal::unavailable(
+            "storage offline",
+        ))))
+        .unwrap();
+    assert!(panel.draw().text().contains("Favorites unavailable"));
+    assert_eq!(panel.draw().flag("favorite", "disabled"), Some(true));
+}
+
+#[tokio::test]
+async fn favorite_removal_uses_the_entry_revision_and_reports_conflicts_without_retry() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::favorites(&mut panel, &["org.example.Files.desktop"]).unwrap();
+    panel.send(Message::ToggleFavorite).unwrap();
+    let read = panel.expect_storage_read::<Favorites>().await.unwrap();
+    assert_eq!(read.query().key(), Some(&Inspect::id()));
+    read.reply(&Fixture::snapshot(&["org.example.Files.desktop"]))
+        .unwrap();
+    let remove = panel.expect_storage_remove::<Favorites>().await.unwrap();
+    assert_eq!(remove.key(), &Inspect::id());
+    assert_eq!(remove.expected(), &Fixture::revision(4));
+    remove
+        .refuse(Refusal::new(ErrorCode::Conflict, "changed concurrently"))
+        .unwrap();
+    panel.complete().await.unwrap();
+    assert!(!panel.model().saving);
+    assert!(panel.draw().text().contains("changed concurrently"));
+    assert!(panel.take_effect().is_none());
+}
+
+#[tokio::test]
+async fn launch_does_not_depend_on_favorites_storage() {
+    let mut panel = SurfaceHarness::<Panel>::new(&Fixture::state()).unwrap();
+    panel
+        .take_effect()
+        .unwrap()
+        .complete(Err(EffectError::Refused(Refusal::unavailable(
+            "storage offline",
+        ))))
+        .unwrap();
+    Inspect::activate(&mut panel);
+    assert!(matches!(
+        panel.complete_effect(Ok(None)).await.unwrap(),
+        Operation::Act(_)
+    ));
+    panel.complete().await.unwrap();
+    assert!(matches!(
+        panel.complete_effect(Ok(None)).await.unwrap(),
+        Operation::ChangePresentation(_)
+    ));
+    panel.complete().await.unwrap();
+    assert!(panel.take_effect().is_none());
+}
+
+#[test]
+fn snapshots_update_each_instance_without_resetting_its_query() {
+    let mut bar = Fixture::panel(&Fixture::state()).unwrap();
+    let mut overlay = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::edit(&mut overlay, "files");
+    Fixture::favorites(&mut bar, &["org.example.Terminal.desktop"]).unwrap();
+    Fixture::favorites(&mut overlay, &["org.example.Terminal.desktop"]).unwrap();
+    assert_eq!(Inspect::ids(&mut bar)[0], "org.example.Terminal.desktop");
+    assert_eq!(overlay.model().query.text(), "files");
+    assert_eq!(Inspect::ids(&mut overlay), vec![Inspect::id().to_string()]);
+}
+
+#[tokio::test]
+async fn removing_a_favorite_preserves_other_favorites_and_does_not_dismiss() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::favorites(
+        &mut panel,
+        &["org.example.Files.desktop", "org.example.Terminal.desktop"],
+    )
+    .unwrap();
+    panel.send(Message::ToggleFavorite).unwrap();
+    panel
+        .expect_storage_read::<Favorites>()
+        .await
+        .unwrap()
+        .reply(&Fixture::snapshot(&["org.example.Files.desktop"]))
+        .unwrap();
+    let remove = panel.expect_storage_remove::<Favorites>().await.unwrap();
+    assert_eq!(remove.key(), &Inspect::id());
+    remove.succeed(Fixture::revision(6)).unwrap();
+    panel.complete().await.unwrap();
+    Fixture::favorites(&mut panel, &["org.example.Terminal.desktop"]).unwrap();
+    assert_eq!(Inspect::ids(&mut panel)[0], "org.example.Terminal.desktop");
+    assert_eq!(
+        panel.draw().prop("favorite", "label").as_deref(),
+        Some("Add favorite")
+    );
+    assert!(!panel.model().saving);
+    assert!(panel.take_effect().is_none());
+}
+
+#[tokio::test]
+async fn removing_an_already_absent_favorite_finishes_without_a_write() {
+    let mut panel = Fixture::panel(&Fixture::state()).unwrap();
+    Fixture::favorites(&mut panel, &["org.example.Files.desktop"]).unwrap();
+    panel.send(Message::ToggleFavorite).unwrap();
+    panel
+        .expect_storage_read::<Favorites>()
+        .await
+        .unwrap()
+        .reply(&Fixture::snapshot(&[]))
+        .unwrap();
+    panel.complete().await.unwrap();
+    assert!(!panel.model().saving);
+    assert!(panel.model().error.is_empty());
+    assert!(panel.take_effect().is_none());
 }
