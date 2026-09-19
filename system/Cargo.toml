@@ -8,15 +8,22 @@ workspace = true
 
 [dependencies]
 ai-usage = { path = "../plugins/ai-usage" }
+ai-usage-commands = { path = "../commands/ai-usage" }
 audio = { path = "../plugins/audio" }
+audio-commands = { path = "../commands/audio" }
 bluetooth = { path = "../plugins/bluetooth" }
+bluetooth-commands = { path = "../commands/bluetooth" }
 clock = { path = "../plugins/clock" }
 display = { path = "../plugins/display" }
+display-commands = { path = "../commands/display" }
 launcher = { path = "../plugins/launcher" }
 media = { path = "../plugins/media" }
+media-commands = { path = "../commands/media" }
 network = { path = "../plugins/network" }
 omega-document = { workspace = true }
 omega-omarchy = { workspace = true }
 power = { path = "../plugins/power" }
+power-commands = { path = "../commands/power" }
 system-monitor = { path = "../plugins/system-monitor" }
 workspaces = { path = "../plugins/workspaces" }
+workspaces-commands = { path = "../commands/workspaces" }

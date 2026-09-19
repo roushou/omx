@@ -1,12 +1,13 @@
 //! AI subscription usage collected by Omarchy and shared across all plugin instances.
-mod data;
+
+use ai_usage_commands as data;
+use ai_usage_commands::Refresh;
 mod panel;
-mod source;
 
 pub use data::Snapshot;
 use omega::{
-    Command, Surface, View,
-    record::{Own, Watch},
+    Surface, View,
+    record::Watch,
     surface::{Events, Task},
     ui::{Glyph, Icon, Row, Text},
 };
@@ -110,53 +111,8 @@ impl Surface for Indicator {
     }
 }
 
-/// Admit an immediate collection. Repeated requests join the active collection.
-/// Completion acknowledges admission; the shared snapshot reports progress and errors.
-#[derive(Debug, omega::Command)]
-#[omega(name = "refresh")]
-pub struct Refresh {
-    snapshot: Own<Snapshot>,
-}
-
-impl Command for Refresh {
-    type Input = ();
-    type Output = ();
-
-    async fn call(&self, _: ()) -> omega::Result<()> {
-        self.snapshot
-            .set(&source::Source::shared().poll(true))
-            .await
-    }
-}
-
-/// Publish worker progress and refresh automatically when due. Schedule every 5 seconds.
-/// Collection runs every 15 minutes, or after 1 minute following a collection failure.
-#[derive(Debug, omega::Command)]
-#[omega(name = "poll")]
-pub struct Poll {
-    snapshot: Own<Snapshot>,
-}
-
-impl Command for Poll {
-    type Input = ();
-    type Output = ();
-
-    async fn call(&self, _: ()) -> omega::Result<()> {
-        let next = source::Source::shared().poll(false);
-
-        if self.snapshot.get() != next {
-            self.snapshot.set(&next).await?;
-        }
-        Ok(())
-    }
-}
-
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<Refresh>()
-        .command::<Poll>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

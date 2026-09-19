@@ -1,9 +1,11 @@
 //! Player-specific media controls with instance-local player selection.
 
+use media_commands::{Next, Pause, Play, Previous};
+
 use desktop_ui::PanelHeader;
 use omega::{
-    Command, Surface, View,
-    platform::audio::{Media, MediaControl, Playback, Player, PlayerId},
+    Surface, View,
+    platform::audio::{Media, Playback, Player, PlayerId},
     surface::{Events, Task},
     ui::{Button, Column, Component, Glyph, Icon, List, Row, Separator, Size, Text},
 };
@@ -93,12 +95,21 @@ pub struct Panel {
     media: Media,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _play: omega::command::Caller<Play>,
+    _pause: omega::command::Caller<Pause>,
+    _previous: omega::command::Caller<Previous>,
+    _next: omega::command::Caller<Next>,
+}
+
 impl Surface for Panel {
     type Model = Model;
     type Message = Message;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, model: &mut Model, message: Message, _: &()) -> Task<Message> {
+    fn update(&self, model: &mut Model, message: Message, _: &Self::Effects) -> Task<Message> {
         match message {
             Message::Select(id) => {
                 if let Ok(id) = PlayerId::try_from(id)
@@ -267,14 +278,6 @@ impl Players {
             .or_else(|| media.players().into_iter().next())
     }
 
-    fn find(media: &Media, id: &PlayerId) -> omega::Result<Player> {
-        media
-            .players()
-            .into_iter()
-            .find(|p| p.id() == id)
-            .ok_or_else(|| omega::Error::invalid("This media player is no longer available"))
-    }
-
     fn title(player: &Player) -> &str {
         if player.title().is_empty() {
             player.identity()
@@ -303,117 +306,9 @@ impl Players {
     }
 }
 
-/// Play on the specified player; unavailable or unsupported targets are refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "play")]
-pub struct Play {
-    media: Media,
-    control: MediaControl,
-}
-
-impl Command for Play {
-    type Input = PlayerId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Start playback in a media player";
-
-    async fn call(&self, id: PlayerId) -> omega::Result<()> {
-        let player = Players::find(&self.media, &id)?;
-
-        if !player.can_play() {
-            return Err(omega::Error::invalid("This player does not support play"));
-        }
-
-        self.control.player(&id).play().await
-    }
-}
-
-/// Pause on the specified player; unavailable or unsupported targets are refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "pause")]
-pub struct Pause {
-    media: Media,
-    control: MediaControl,
-}
-
-impl Command for Pause {
-    type Input = PlayerId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Pause a media player";
-
-    async fn call(&self, id: PlayerId) -> omega::Result<()> {
-        let player = Players::find(&self.media, &id)?;
-
-        if !player.can_pause() {
-            return Err(omega::Error::invalid("This player does not support pause"));
-        }
-
-        self.control.player(&id).pause().await
-    }
-}
-
-/// Previous on the specified player; unavailable or unsupported targets are refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "previous")]
-pub struct Previous {
-    media: Media,
-    control: MediaControl,
-}
-
-impl Command for Previous {
-    type Input = PlayerId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Return to the previous track";
-
-    async fn call(&self, id: PlayerId) -> omega::Result<()> {
-        let player = Players::find(&self.media, &id)?;
-
-        if !player.can_go_previous() {
-            return Err(omega::Error::invalid(
-                "This player does not support previous",
-            ));
-        }
-
-        self.control.player(&id).previous().await
-    }
-}
-
-/// Next on the specified player; unavailable or unsupported targets are refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "next")]
-pub struct Next {
-    media: Media,
-    control: MediaControl,
-}
-
-impl Command for Next {
-    type Input = PlayerId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Skip to the next track";
-
-    async fn call(&self, id: PlayerId) -> omega::Result<()> {
-        let player = Players::find(&self.media, &id)?;
-
-        if !player.can_go_next() {
-            return Err(omega::Error::invalid("This player does not support next"));
-        }
-
-        self.control.player(&id).next().await
-    }
-}
-
-/// Register the bar, panel, and player-specific commands.
+/// Register the media surfaces.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<Play>()
-        .command::<Pause>()
-        .command::<Previous>()
-        .command::<Next>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

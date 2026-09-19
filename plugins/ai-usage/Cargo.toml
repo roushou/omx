@@ -5,15 +5,11 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
+ai-usage-commands = { path = "../../commands/ai-usage" }
 chrono = "0.4"
 desktop-ui = { path = "../../crates/desktop-ui" }
-libc = "0.2"
 omega.workspace = true
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["process", "time", "rt", "sync"] }
 
 [dev-dependencies]
 omega-preview.workspace = true
-tempfile = "3"
-tokio = { version = "1", features = ["macros", "rt", "test-util"] }
+serde_json = "1"

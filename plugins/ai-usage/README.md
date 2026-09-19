@@ -40,19 +40,20 @@ The [system document](../../system/src/main.rs) includes this schedule:
 .schedule(Schedules::every(
     "ai-usage-poll",
     Cadence::seconds(5),
-    Actions::invoke(ai_usage::Poll),
+    Actions::invoke(ai_usage_commands::Poll),
 ))
 ```
 
 `Actions`, `Cadence`, and `Schedules` come from `omega_document`. Include this
-schedule if you copy the plugin into another config.
+schedule and `.command_host(ai_usage_commands::Host::declaration())?` if you
+copy the plugin into another config. Copy `commands/ai-usage` alongside the UI.
 
 The schedule publishes worker progress every five seconds. Collection runs at
 startup, every 15 minutes, or when you click **Refresh**. It can also be requested
 from the CLI:
 
 ```sh
-omega run ai-usage refresh
+omega run ai-usage.refresh
 ```
 
 One worker serves all monitors and panels. Repeated refresh requests share the
@@ -86,6 +87,7 @@ omega preview ai-usage --case stale
 cargo test -p ai-usage
 ```
 
-[data.rs](src/data.rs) parses collector records, [source.rs](src/source.rs) owns
+[data.rs](../../commands/ai-usage/src/data.rs) parses collector records,
+[source.rs](../../commands/ai-usage/src/source.rs) owns
 collection and caching, and [panel.rs](src/panel.rs) renders the shared snapshot.
 Previews use synthetic data and never run collectors.

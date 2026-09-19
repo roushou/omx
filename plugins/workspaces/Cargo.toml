@@ -8,6 +8,7 @@ workspace = true
 
 [dependencies]
 omega = { workspace = true }
+workspaces-commands = { path = "../../commands/workspaces" }
 
 [dev-dependencies]
 omega-preview = { workspace = true }

@@ -1,4 +1,5 @@
 use super::{previews::Fixture, *};
+use omega::platform::bluetooth::DeviceId;
 use omega::{
     config::IntoValue,
     testing::{
@@ -68,7 +69,7 @@ async fn controls_bind_adapter_qualified_endpoints() {
         .find(|n| {
             n.events
                 .get("press")
-                .is_some_and(|b| b.command == "connect")
+                .is_some_and(|b| b.command == "bluetooth.connect")
         })
         .unwrap();
 
@@ -130,9 +131,19 @@ async fn matching_state_does_not_issue_a_toggle() {
 fn capabilities_are_limited_to_bluetooth() {
     assert_eq!(
         manifest_of(&plugin()).granted().unwrap(),
-        vec![
-            omega::internal::Capability::StateRead,
-            omega::internal::Capability::Bluetooth
-        ]
+        vec![omega::internal::Capability::StateRead]
     );
+}
+
+#[test]
+fn command_effects_belong_to_the_host() {
+    let ui = manifest_of(&plugin());
+    assert!(ui.commands.is_empty());
+    let host = bluetooth_commands::Host::declaration().manifest().unwrap();
+    assert!(
+        host.granted()
+            .unwrap()
+            .contains(&omega::internal::Capability::Bluetooth)
+    );
+    assert!(!host.commands.is_empty());
 }

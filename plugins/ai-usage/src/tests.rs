@@ -68,98 +68,6 @@ impl Fixture {
 }
 
 #[test]
-fn collector_records_preserve_meaning_and_roundtrip_shared_state() {
-    let provider = Fixture::provider();
-
-    assert_eq!(provider.limits[0].percent, 0.42);
-    assert_eq!(provider.models[0].total(), 145000);
-    assert_eq!(provider.days[1].message_count, 145000);
-    let snapshot = Fixture::snapshot();
-
-    assert_eq!(Snapshot::read(&snapshot.write()), snapshot);
-}
-
-#[test]
-fn invalid_identity_schema_and_percentages_are_rejected() {
-    let id = ProviderId::parse("codex").unwrap();
-
-    for (key, value) in [
-        ("id", serde_json::json!("../codex")),
-        ("id", serde_json::json!("claude")),
-        ("schemaVersion", serde_json::json!(2)),
-        ("updatedAt", serde_json::json!("yesterday")),
-    ] {
-        let mut record = Fixture::record();
-        record[key] = value;
-
-        assert!(Provider::parse(&serde_json::to_vec(&record).unwrap(), &id).is_err());
-    }
-
-    let mut record = Fixture::record();
-    record["limits"][0]["percent"] = serde_json::json!(-0.5);
-
-    assert!(Provider::parse(&serde_json::to_vec(&record).unwrap(), &id).is_err());
-    record["limits"][0]["percent"] = serde_json::json!(1.2);
-
-    assert_eq!(
-        Provider::parse(&serde_json::to_vec(&record).unwrap(), &id)
-            .unwrap()
-            .limits[0]
-            .percent,
-        1.2
-    );
-}
-
-#[test]
-fn future_fields_are_accepted_but_duplicate_days_are_refused() {
-    let mut record = Fixture::record();
-    record["futureField"] = serde_json::json!(true);
-    let id = ProviderId::parse("codex").unwrap();
-
-    assert!(Provider::parse(&serde_json::to_vec(&record).unwrap(), &id).is_ok());
-    record["recentDays"][1] = record["recentDays"][0].clone();
-
-    assert!(Provider::parse(&serde_json::to_vec(&record).unwrap(), &id).is_err());
-}
-
-#[test]
-fn one_bad_record_does_not_hide_other_providers() {
-    let dir = tempfile::tempdir().unwrap();
-    std::fs::write(
-        dir.path().join("codex.json"),
-        serde_json::to_vec(&Fixture::record()).unwrap(),
-    )
-    .unwrap();
-    std::fs::write(dir.path().join("claude.json"), b"broken").unwrap();
-    let (providers, errors) = source::Records::read(dir.path()).unwrap();
-
-    assert_eq!(providers.len(), 1);
-    assert_eq!(errors.len(), 1);
-    assert!(errors[0].1.contains("claude"));
-    assert!(
-        source::Records::read(&dir.path().join("missing"))
-            .unwrap()
-            .0
-            .is_empty()
-    );
-}
-
-#[test]
-fn oversized_and_symlinked_records_are_refused() {
-    let dir = tempfile::tempdir().unwrap();
-    std::fs::write(dir.path().join("codex.json"), vec![b' '; 512 * 1024 + 1]).unwrap();
-    std::os::unix::fs::symlink(
-        dir.path().join("codex.json"),
-        dir.path().join("claude.json"),
-    )
-    .unwrap();
-    let (providers, errors) = source::Records::read(dir.path()).unwrap();
-
-    assert!(providers.is_empty());
-    assert_eq!(errors.len(), 2);
-}
-
-#[test]
 fn panel_selection_is_local_and_survives_refreshes() {
     let mut first = SurfaceHarness::<Panel>::new(&Fixture::state(Fixture::snapshot())).unwrap();
     let mut second = SurfaceHarness::<Panel>::new(&Fixture::state(Fixture::snapshot())).unwrap();
@@ -209,7 +117,7 @@ fn pending_refresh_disables_the_action_and_stale_data_is_labelled() {
     assert!(drawn.node("collection-error").is_some());
     assert_eq!(
         drawn.node("refresh").unwrap().events["press"].command,
-        "refresh"
+        "ai-usage.refresh"
     );
 }
 

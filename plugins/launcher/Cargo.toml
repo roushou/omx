@@ -7,11 +7,11 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-audio = { path = "../audio" }
-bluetooth = { path = "../bluetooth" }
+audio-commands = { path = "../../commands/audio" }
+bluetooth-commands = { path = "../../commands/bluetooth" }
 desktop-ui = { path = "../../crates/desktop-ui" }
-display = { path = "../display" }
-media = { path = "../media" }
+display-commands = { path = "../../commands/display" }
+media-commands = { path = "../../commands/media" }
 omega = { workspace = true }
 typesafe = { path = "../../crates/typesafe" }
 

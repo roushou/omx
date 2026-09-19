@@ -1,11 +1,11 @@
 //! Known Bluetooth devices and explicit connection controls.
 
+use bluetooth_commands::{Connect, Disconnect};
+
 use desktop_ui::{ItemRow, PanelHeader};
 use omega::{
-    Command, Surface, View,
-    platform::bluetooth::{
-        Bluetooth, BluetoothControl, BluetoothDevice, BluetoothStatus, DeviceId,
-    },
+    Surface, View,
+    platform::bluetooth::{Bluetooth, BluetoothDevice, BluetoothStatus},
     surface::{Events, Task},
     ui::{Button, Column, Component, Glyph, Icon, Row, Separator, Size, Text},
 };
@@ -80,12 +80,19 @@ pub struct Panel {
     bluetooth: Bluetooth,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _connect: omega::command::Caller<Connect>,
+    _disconnect: omega::command::Caller<Disconnect>,
+}
+
 impl Surface for Panel {
     type Model = ();
     type Message = Infallible;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &()) -> Task<Infallible> {
+    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
         match message {}
     }
 
@@ -195,77 +202,11 @@ impl Devices {
             _ => Icon::new(Glyph::Bluetooth),
         }
     }
-
-    fn find(bluetooth: &Bluetooth, id: &DeviceId) -> omega::Result<BluetoothDevice> {
-        bluetooth
-            .known_devices()
-            .into_iter()
-            .find(|device| device.id() == id)
-            .ok_or_else(|| omega::Error::invalid("This Bluetooth device is no longer available"))
-    }
 }
 
-/// Connect a known, connectable endpoint. Already-connected devices cause no action.
-#[derive(Debug, omega::Command)]
-#[omega(name = "connect")]
-pub struct Connect {
-    bluetooth: Bluetooth,
-    control: BluetoothControl,
-}
-
-impl Command for Connect {
-    type Input = DeviceId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Connect a known Bluetooth device";
-
-    async fn call(&self, id: DeviceId) -> omega::Result<()> {
-        let device = Devices::find(&self.bluetooth, &id)?;
-
-        if device.is_connected() {
-            return Ok(());
-        }
-
-        if !device.can_connect() {
-            return Err(omega::Error::invalid(
-                "This device cannot connect while its adapter is off or the device is unavailable",
-            ));
-        }
-
-        self.control.connect(&id).await
-    }
-}
-
-/// Disconnect one known endpoint. Already-disconnected devices cause no action.
-#[derive(Debug, omega::Command)]
-#[omega(name = "disconnect")]
-pub struct Disconnect {
-    bluetooth: Bluetooth,
-    control: BluetoothControl,
-}
-
-impl Command for Disconnect {
-    type Input = DeviceId;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Disconnect a Bluetooth device";
-
-    async fn call(&self, id: DeviceId) -> omega::Result<()> {
-        if !Devices::find(&self.bluetooth, &id)?.is_connected() {
-            return Ok(());
-        }
-
-        self.control.disconnect(&id).await
-    }
-}
-
-/// Register the bar, panel, and device controls.
+/// Register the Bluetooth surfaces.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<Connect>()
-        .command::<Disconnect>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

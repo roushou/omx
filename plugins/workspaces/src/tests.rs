@@ -1,4 +1,5 @@
 use super::{fixtures::Fixture, *};
+use omega::platform::desktop::WorkspaceIndex;
 use omega::{
     Args, Input,
     config::{Fields, IntoValue},
@@ -53,7 +54,7 @@ fn default_slots_match_omarchy_and_bind_typed_destinations() {
         assert_eq!(drawn.flag(key, "flat"), Some(true));
         let binding = &drawn.node(key).unwrap().events["press"];
 
-        assert_eq!(binding.command, "select");
+        assert_eq!(binding.command, "workspaces.select");
         assert_eq!(
             WorkspaceIndex::decode(Args::new(binding.args.clone()))
                 .unwrap()

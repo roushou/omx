@@ -18,9 +18,9 @@ Add this placement in [system/src/main.rs](../../system/src/main.rs).
 ## Commands
 
 ```sh
-omega run audio volume 40%
-omega run audio audible false  # mute
-omega run audio audible true   # unmute
+omega run audio.volume 40%
+omega run audio.audible false  # mute
+omega run audio.audible true   # unmute
 ```
 
 Volume accepts 0–100%. Mute commands set the requested state, so running the same
@@ -40,5 +40,6 @@ cargo test -p audio
 ```
 
 Use `omega preview audio --list` for all cases. The
-[source](src/lib.rs) uses Omega's audio reading and control APIs, with the slider
-layout from [desktop-ui](../../crates/desktop-ui/README.md).
+[UI](src/lib.rs) reads audio state and calls
+[audio commands](../../commands/audio/src/commands.rs) for changes. The slider
+layout comes from [desktop-ui](../../crates/desktop-ui/README.md).

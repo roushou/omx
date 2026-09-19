@@ -19,7 +19,7 @@ PluginWidget::new("display", display::Indicator)
 Use the slider or run:
 
 ```sh
-omega run display brightness 60%
+omega run display.brightness 60%
 ```
 
 The command accepts 0–100% and controls the system backlight, usually the laptop

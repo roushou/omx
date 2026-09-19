@@ -9,6 +9,7 @@ workspace = true
 [dependencies]
 desktop-ui = { path = "../../crates/desktop-ui" }
 omega = { workspace = true }
+power-commands = { path = "../../commands/power" }
 
 [dev-dependencies]
 omega-preview = { workspace = true }

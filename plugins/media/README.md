@@ -45,4 +45,5 @@ cargo test -p media
 ```
 
 Use `omega preview media --list` for all cases. See
-[src/lib.rs](src/lib.rs) for the bar, commands, and panel selection.
+[src/lib.rs](src/lib.rs) for the bar and panel selection, and
+[commands](../../commands/media/src/commands.rs) for playback controls.

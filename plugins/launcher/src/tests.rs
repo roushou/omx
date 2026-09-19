@@ -588,8 +588,8 @@ async fn discovered_actions_use_typed_calls_and_never_write_favorites() {
         .unwrap()
         .commands()
         .unwrap()
-        .entry(audio::SetAudible, true)
-        .entry(audio::SetVolume, false)
+        .entry(audio_commands::SetAudible, true)
+        .entry(audio_commands::SetVolume, false)
         .complete()
         .unwrap();
     panel.complete().await.unwrap();
@@ -611,7 +611,7 @@ async fn discovered_actions_use_typed_calls_and_never_write_favorites() {
     let call = panel
         .take_effect()
         .unwrap()
-        .command::<audio::SetAudible>()
+        .command::<audio_commands::SetAudible>()
         .unwrap();
     assert!(!*call.input());
     assert!(panel.take_effect().is_none());

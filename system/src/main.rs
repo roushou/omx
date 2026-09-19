@@ -15,11 +15,18 @@ struct System;
 impl System {
     fn document() -> omega_document::Result<Document> {
         Ok(Document::new()
+            .command_host(audio_commands::Host::declaration())?
+            .command_host(bluetooth_commands::Host::declaration())?
+            .command_host(display_commands::Host::declaration())?
+            .command_host(media_commands::Host::declaration())?
+            .command_host(power_commands::Host::declaration())?
+            .command_host(workspaces_commands::Host::declaration())?
+            .command_host(ai_usage_commands::Host::declaration())?
             .env("OMEGA_HOST", Host::name())
             .schedule(Schedules::every(
                 "ai-usage-poll",
                 Cadence::seconds(5),
-                Actions::invoke(ai_usage::Poll),
+                Actions::invoke(ai_usage_commands::Poll),
             ))
             .with(
                 Shell::new()

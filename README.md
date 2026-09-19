@@ -76,7 +76,7 @@ and persist across daemon restarts.
 See the [launcher guide](plugins/launcher/README.md#replace-the-apps-shortcut)
 to bind it to Super+Alt+Space. Keybindings are configured separately from the bar.
 
-The launcher uses Omega's unreleased storage and command APIs. Development requires
+This configuration uses Omega's unreleased storage and command-host APIs. Development requires
 linking the matching Omega checkout with `omega link /path/to/omega` and
 running its daemon with protocol version 2. Rebuild plugins and reinstall the renderer
 when updating Omega. Published Omega 0.3.9 cannot build this launcher yet.
@@ -99,8 +99,10 @@ PluginWidget::new("network", network::Indicator)
 bar section in `System::document`, then run `omega build --wait`. Placement
 settings apply to both the indicator and its panel.
 
-To reuse a plugin in another Omega configuration, copy its directory, add it to
-your system crate's dependencies, and place its surfaces. Most plugins also use
+To reuse a plugin in another Omega configuration, copy its directory and its
+workspace dependencies, add it to your system crate's dependencies, and place its
+surfaces. For plugins that call commands, also register their
+[command host](commands/README.md) in the system document. Most plugins also use
 [desktop-ui](crates/desktop-ui/README.md). AI usage needs the schedule shown
 in [its README](plugins/ai-usage/README.md).
 

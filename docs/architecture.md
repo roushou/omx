@@ -14,12 +14,15 @@ supervision, and renderer internals are documented in
 | Location                                            | Responsibility                                          |
 | --------------------------------------------------- | ------------------------------------------------------- |
 | [system/src/main.rs](../system/src/main.rs)         | Desired bar layout, placements, settings, and schedules |
+| `commands/<domain>/`                                | Reusable command types and persistent host binaries     |
 | `plugins/<name>/`                                   | One plugin's views, state, and behavior                 |
 | [crates/desktop-ui](../crates/desktop-ui/README.md) | Reusable panel layouts                                  |
 
-[Cargo.toml](../Cargo.toml) discovers `plugins/*` and `crates/*` members.
+[Cargo.toml](../Cargo.toml) discovers `plugins/*`, `commands/*`, and `crates/*` members.
 Membership under `plugins/` declares a runnable plugin. A library is linked into
-its consumers and never starts a process of its own.
+its consumers and never starts a process of its own. Command crates also expose
+a binary, marked with `package.metadata.omega.kind = "command-host"`. The system
+document registers each host explicitly; importing its library does not start it.
 
 Plugin crates expose a library target so `system` can refer to their surface and
 settings types. Their binary entry points call the registered plugin's `run()`
@@ -30,16 +33,18 @@ a second plugin runtime.
 
 ```mermaid
 flowchart LR
-    Config[System document and plugin crates] --> Build[omega build]
+    Config[System document, plugins, and command hosts] --> Build[omega build]
     Build --> Daemon[Omega daemon]
     Daemon --> Plugins[Plugin processes]
     Plugins -->|View trees| Daemon
+    Daemon --> Hosts[Command host processes]
     Daemon --> Renderer[Omega renderer in Omarchy]
 ```
 
-`omega build` compiles plugins, queries their manifests, evaluates the system
-document, and publishes a build. The daemon applies it, starts plugins, and
-creates the configured surface instances. The renderer draws the view trees
+`omega build` compiles plugins and command hosts, queries their manifests,
+evaluates the system document, and publishes a build. The daemon applies it,
+starts plugins, and creates the configured surface instances. Command hosts in
+this configuration start on their first invocation. The renderer draws the view trees
 published by those instances.
 
 A placement pairs an indicator with an optional panel:
@@ -70,12 +75,12 @@ Standalone presentations use Omega's renderer with the Omarchy theme adapter.
 
 The plugins use these sources of data:
 
-| Kind               | Example                                       | Owner                        |
-| ------------------ | --------------------------------------------- | ---------------------------- |
-| Service reading    | Volume, Wi-Fi connection, focused workspace   | Omega's platform services    |
-| Panel model        | Calendar month, search query, selected player | One surface instance         |
-| Shared record      | AI usage snapshot                             | The plugin that publishes it |
-| Persistent storage | Launcher favorites                            | Omega's storage service      |
+| Kind               | Example                                       | Owner                              |
+| ------------------ | --------------------------------------------- | ---------------------------------- |
+| Service reading    | Volume, Wi-Fi connection, focused workspace   | Omega's platform services          |
+| Panel model        | Calendar month, search query, selected player | One surface instance               |
+| Shared record      | AI usage snapshot                             | The command host that publishes it |
+| Persistent storage | Launcher favorites                            | Omega's storage service            |
 
 Surfaces implement Omega's `Surface` contract: a model, messages, effects, an
 `update` method, and a `render` method. Stateless indicators use `()` as their
@@ -90,8 +95,12 @@ selected network, password field, and pending request locally. Connecting sends
 a request through Omega's Wi-Fi control API. Completion clears the pending state;
 the Wi-Fi reading determines whether a connection was established.
 
-Simpler controls use commands. [Audio](../plugins/audio/src/lib.rs) registers
-volume and mute commands that can be called from a button or `omega run`.
+Simpler controls call commands. [Audio commands](../commands/audio/src/commands.rs)
+run in a persistent host shared by the audio panel, launcher, and `omega run`.
+The UI declares typed `Caller<T>` dependencies; Omega routes each call to its host.
+The host starts on the first call and stays running until stopped or replaced.
+Native service connections remain shared through the daemon. See
+[command hosts](../commands/README.md) for the registration pattern.
 Workspaces sends a typed destination to the compositor and displays focus from
 the subsequent reading, including changes made through global shortcuts.
 
@@ -140,7 +149,7 @@ services. Its worker runs Omarchy's collectors and reads their JSON output files
 Omarchy collectors -> JSON records -> Source cache -> Snapshot -> Indicator / Panel
 ```
 
-[Source](../plugins/ai-usage/src/source.rs) owns one worker per plugin process,
+[Source](../commands/ai-usage/src/source.rs) owns one worker in the AI command host,
 refresh admission, cached records, and retry timing. The system document invokes
 `Poll` every five seconds. `Poll` publishes changed snapshots through `Own<Snapshot>`;
 the surfaces read the same record through `Watch<Snapshot>`.

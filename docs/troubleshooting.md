@@ -77,6 +77,27 @@ Restarting ends that plugin's current panel instances and their local state.
 If restarting doesn't help, keep the logs and report the failure rather than
 repeatedly restarting it.
 
+## A command fails while its panel is healthy
+
+The UI plugin and its command host are separate processes. For audio, inspect:
+
+```sh
+omega status audio-commands
+omega commands --json
+```
+
+`Idle` is normal before an on-demand host's first call. `Backing off` reports
+when another startup is eligible; an on-demand host still needs a new call.
+`Failed` includes the last startup error. Status also shows active and queued
+calls, process phases, and recent command failures with their execution times.
+Use `omega commands audio-commands` for readable command and host diagnostics,
+or add `--json` for structured output. A ready UI does not establish that its
+command host can complete an operation.
+
+Check that the host is registered with `.command_host(...)` in
+`system/src/main.rs`. Importing its library into a plugin is not sufficient.
+For daemon-side failures, inspect `journalctl --user -u omega.service -n 100`.
+
 ## Panels don't open, clicks fail, or keyboard focus is wrong
 
 Check that the widget has a `.panel(...)` placement. Workspaces intentionally has
@@ -168,7 +189,7 @@ Run the collector directly to see its diagnostics:
 
 ```sh
 omarchy agent usage-update
-omega run ai-usage refresh
+omega run ai-usage.refresh
 ```
 
 Collectors require the relevant provider's login or account configuration. They

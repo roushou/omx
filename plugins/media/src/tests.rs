@@ -43,7 +43,7 @@ fn selection_is_local_and_transport_targets_the_selected_player() {
     assert!(other.draw().text().contains("Midnight City"));
     assert_eq!(
         drawn.node("playback").unwrap().events["press"].command,
-        "play"
+        "media.play"
     );
 
     assert_eq!(
@@ -134,9 +134,19 @@ fn paused_players_remain_accessible_and_unicode_titles_are_bounded() {
     assert!(short.ends_with('…'));
     assert_eq!(
         manifest_of(&plugin()).granted().unwrap(),
-        vec![
-            omega::internal::Capability::StateRead,
-            omega::internal::Capability::Media
-        ]
+        vec![omega::internal::Capability::StateRead]
     );
+}
+
+#[test]
+fn command_effects_belong_to_the_host() {
+    let ui = manifest_of(&plugin());
+    assert!(ui.commands.is_empty());
+    let host = media_commands::Host::declaration().manifest().unwrap();
+    assert!(
+        host.granted()
+            .unwrap()
+            .contains(&omega::internal::Capability::Media)
+    );
+    assert!(!host.commands.is_empty());
 }

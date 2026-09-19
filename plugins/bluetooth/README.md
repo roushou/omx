@@ -39,5 +39,6 @@ cargo test -p bluetooth
 ```
 
 Use `omega preview bluetooth --list` for all cases. See
-[src/lib.rs](src/lib.rs) for device ordering and commands, and
+[src/lib.rs](src/lib.rs) for device ordering,
+[commands](../../commands/bluetooth/src/commands.rs) for connection controls, and
 [desktop-ui](../../crates/desktop-ui/README.md) for shared layouts.

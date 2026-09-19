@@ -30,12 +30,12 @@ fn controls_use_current_volume_and_mute_state() {
         assert_eq!(panel.flag(&toggle, "on"), Some(!muted));
         assert_eq!(
             panel.node(&toggle).unwrap().events["change"].command,
-            "audible"
+            "audio.audible"
         );
 
         assert_eq!(
             panel.node("output/slider").unwrap().events["change"].command,
-            "volume"
+            "audio.volume"
         );
     }
 }

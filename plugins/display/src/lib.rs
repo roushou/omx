@@ -1,9 +1,11 @@
 //! Screen backlight controls and compositor monitor readings.
 
+use display_commands::SetBrightness;
+
 use desktop_ui::{ItemRow, LevelControl, PanelHeader};
 use omega::{
-    Command, Percent, Surface, View,
-    platform::desktop::{Backlight, Brightness, Monitors},
+    Percent, Surface, View,
+    platform::desktop::{Backlight, Monitors},
     surface::{Events, Task},
     ui::{Column, Component, Header, Icon, Row, Separator, Size, Text},
 };
@@ -73,12 +75,18 @@ pub struct Panel {
     monitors: Monitors,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _set_brightness: omega::command::Caller<SetBrightness>,
+}
+
 impl Surface for Panel {
     type Model = ();
     type Message = Infallible;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &()) -> Task<Infallible> {
+    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
         match message {}
     }
 
@@ -156,29 +164,6 @@ impl Surface for Panel {
     }
 }
 
-/// Set the supported screen backlight, from 0% to 100%.
-#[derive(Debug, omega::Command)]
-#[omega(name = "brightness")]
-pub struct SetBrightness {
-    backlight: Backlight,
-    brightness: Brightness,
-}
-
-impl Command for SetBrightness {
-    type Input = Percent;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Set the screen backlight brightness";
-
-    async fn call(&self, level: Percent) -> omega::Result<()> {
-        if !self.backlight.has_reading() {
-            return Err(omega::Error::invalid("No supported backlight"));
-        }
-
-        self.brightness.set(level).await
-    }
-}
-
 struct Display;
 
 impl Display {
@@ -202,10 +187,7 @@ impl Display {
 
 /// Register the indicator, panel, and typed brightness control.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<SetBrightness>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

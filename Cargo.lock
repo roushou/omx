@@ -15,10 +15,20 @@ dependencies = [
 name = "ai-usage"
 version = "0.1.0"
 dependencies = [
+ "ai-usage-commands",
  "chrono",
  "desktop-ui",
- "libc",
  "omega-preview",
+ "omega-rs",
+ "serde_json",
+]
+
+[[package]]
+name = "ai-usage-commands"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "libc",
  "omega-rs",
  "serde",
  "serde_json",
@@ -51,11 +61,19 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 name = "audio"
 version = "0.1.0"
 dependencies = [
+ "audio-commands",
  "desktop-ui",
  "omega-preview",
  "omega-proto",
  "omega-rs",
  "tokio",
+]
+
+[[package]]
+name = "audio-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -89,10 +107,18 @@ dependencies = [
 name = "bluetooth"
 version = "0.1.0"
 dependencies = [
+ "bluetooth-commands",
  "desktop-ui",
  "omega-preview",
  "omega-rs",
  "tokio",
+]
+
+[[package]]
+name = "bluetooth-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -252,9 +278,17 @@ name = "display"
 version = "0.1.0"
 dependencies = [
  "desktop-ui",
+ "display-commands",
  "omega-preview",
  "omega-rs",
  "tokio",
+]
+
+[[package]]
+name = "display-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -287,7 +321,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -711,11 +745,11 @@ dependencies = [
 name = "launcher"
 version = "0.1.0"
 dependencies = [
- "audio",
- "bluetooth",
+ "audio-commands",
+ "bluetooth-commands",
  "desktop-ui",
- "display",
- "media",
+ "display-commands",
+ "media-commands",
  "omega-preview",
  "omega-rs",
  "tokio",
@@ -757,9 +791,17 @@ name = "media"
 version = "0.1.0"
 dependencies = [
  "desktop-ui",
+ "media-commands",
  "omega-preview",
  "omega-rs",
  "tokio",
+]
+
+[[package]]
+name = "media-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -807,6 +849,8 @@ dependencies = [
 [[package]]
 name = "omega-derive"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cd0d32836d9b0de2872ccb7af16eb73d78e24412a76d1cd1e705ae03bd234ea"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -816,6 +860,8 @@ dependencies = [
 [[package]]
 name = "omega-document"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef5ab3bc94233ef4fb884536059f1a90b44e32c416556b6018d96b8841dce899"
 dependencies = [
  "omega-host",
  "omega-proto",
@@ -827,6 +873,8 @@ dependencies = [
 [[package]]
 name = "omega-host"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9458741d96095b81263e964b8053fd97e48057f5efbef4cedbe450be108a8f8d"
 dependencies = [
  "cargo_metadata",
  "libc",
@@ -842,10 +890,14 @@ dependencies = [
 [[package]]
 name = "omega-keyboard"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "858bbece24dd4603e8eaeb60f6ce20e0f817b1653a888c249f901a85aba01aa5"
 
 [[package]]
 name = "omega-omarchy"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18c9015dba7ebb954bca8c87602010ab8dcfe38b9bfed8be807efba898304afa"
 dependencies = [
  "anyhow",
  "omega-document",
@@ -861,6 +913,8 @@ dependencies = [
 [[package]]
 name = "omega-preview"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd5b63a68714cfdeac2739037f081d2fefd582d6bbfbbd6ff7fc95e560cbe823"
 dependencies = [
  "omega-proto",
  "omega-rs",
@@ -871,6 +925,8 @@ dependencies = [
 [[package]]
 name = "omega-proto"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9b16bdf9dd395fce4a6e3d1c7dffc0443fc57341b65255880be8f5df6aea499"
 dependencies = [
  "bytes",
  "futures-util",
@@ -892,6 +948,8 @@ dependencies = [
 [[package]]
 name = "omega-renderer"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bb43f8a07fe4cb80739a46a7c56a1f8ae8195d04c409fc472a4816491312b8a"
 dependencies = [
  "omega-proto",
  "sha2",
@@ -900,12 +958,12 @@ dependencies = [
 [[package]]
 name = "omega-rs"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c4242565683e86a1608d2e54733a63156a3074996c5030db95cf2eae26b7438"
 dependencies = [
  "omega-derive",
  "omega-keyboard",
  "omega-proto",
- "serde",
- "serde_json",
  "thiserror",
  "tokio",
 ]
@@ -977,7 +1035,15 @@ dependencies = [
  "desktop-ui",
  "omega-preview",
  "omega-rs",
+ "power-commands",
  "tokio",
+]
+
+[[package]]
+name = "power-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -1167,7 +1233,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1308,7 +1374,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1540,18 +1606,25 @@ name = "system"
 version = "0.1.0"
 dependencies = [
  "ai-usage",
+ "ai-usage-commands",
  "audio",
+ "audio-commands",
  "bluetooth",
+ "bluetooth-commands",
  "clock",
  "display",
+ "display-commands",
  "launcher",
  "media",
+ "media-commands",
  "network",
  "omega-document",
  "omega-omarchy",
  "power",
+ "power-commands",
  "system-monitor",
  "workspaces",
+ "workspaces-commands",
 ]
 
 [[package]]
@@ -1573,7 +1646,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2105,6 +2178,14 @@ dependencies = [
  "omega-proto",
  "omega-rs",
  "tokio",
+ "workspaces-commands",
+]
+
+[[package]]
+name = "workspaces-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
 ]
 
 [[package]]
@@ -2201,3 +2282,23 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[patch.unused]]
+name = "omega-document"
+version = "0.4.0"
+
+[[patch.unused]]
+name = "omega-omarchy"
+version = "0.4.0"
+
+[[patch.unused]]
+name = "omega-preview"
+version = "0.4.0"
+
+[[patch.unused]]
+name = "omega-proto"
+version = "0.4.0"
+
+[[patch.unused]]
+name = "omega-rs"
+version = "0.4.0"

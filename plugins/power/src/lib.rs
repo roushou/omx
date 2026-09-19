@@ -1,11 +1,11 @@
 //! Battery state and supported power profiles.
 
+use power_commands::ChangeProfile;
+
 use desktop_ui::{Detail, PanelHeader, Section};
 use omega::{
-    Command, Percent, Surface, View,
-    platform::power::{
-        Battery, Power, PowerProfile, PowerProfiles, ProfileLabel, SetProfile, Status,
-    },
+    Percent, Surface, View,
+    platform::power::{Battery, Power, PowerProfile, PowerProfiles, ProfileLabel, Status},
     surface::{Events, Task},
     ui::{Choice, Column, Component, Glyph, Header, Icon, Progress, Row, Separator, Size, Text},
 };
@@ -92,12 +92,18 @@ pub struct Panel {
     settings: Settings,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _change_profile: omega::command::Caller<ChangeProfile>,
+}
+
 impl Surface for Panel {
     type Model = ();
     type Message = Infallible;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &()) -> Task<Infallible> {
+    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
         match message {}
     }
 
@@ -175,29 +181,6 @@ impl Surface for Panel {
     }
 }
 
-/// Select one of the profiles currently offered by the system.
-#[derive(Debug, omega::Command)]
-#[omega(name = "profile")]
-pub struct ChangeProfile {
-    profiles: PowerProfiles,
-    control: SetProfile,
-}
-
-impl Command for ChangeProfile {
-    type Input = PowerProfile;
-    type Output = ();
-
-    async fn call(&self, profile: PowerProfile) -> omega::Result<()> {
-        if !self.profiles.available().contains(&profile) {
-            return Err(omega::Error::invalid(
-                "Power profile is no longer available",
-            ));
-        }
-
-        self.control.set(profile).await
-    }
-}
-
 struct BatteryIcon;
 
 impl BatteryIcon {
@@ -217,10 +200,7 @@ impl BatteryIcon {
 
 /// Register the surfaces and typed profile control.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<ChangeProfile>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

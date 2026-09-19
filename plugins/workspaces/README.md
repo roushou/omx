@@ -34,7 +34,7 @@ PluginWidget::new("workspaces", workspaces::Indicator)
 You can also switch through Omega's CLI:
 
 ```sh
-omega run workspaces select 3
+omega run workspaces.select 3
 ```
 
 The `select` command takes a `WorkspaceIndex`. Unopened numbered workspaces are

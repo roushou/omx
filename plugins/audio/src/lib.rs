@@ -1,9 +1,11 @@
 //! Default-output volume and mute controls.
 
+use audio_commands::{SetAudible, SetVolume};
+
 use desktop_ui::{LevelControl, PanelHeader};
 use omega::{
-    Command, Percent, Surface, View,
-    platform::audio::{Audio, Volume},
+    Percent, Surface, View,
+    platform::audio::Audio,
     surface::{Events, Task},
     ui::{Column, Component, Glyph, Icon, Row, Separator, Size, Text, Toggle},
 };
@@ -70,12 +72,19 @@ pub struct Panel {
     audio: Audio,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _set_volume: omega::command::Caller<SetVolume>,
+    _set_audible: omega::command::Caller<SetAudible>,
+}
+
 impl Surface for Panel {
     type Model = ();
     type Message = Infallible;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &()) -> Task<Infallible> {
+    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
         match message {}
     }
 
@@ -122,52 +131,6 @@ impl Surface for Panel {
     }
 }
 
-/// Set output volume to a percentage; unavailable audio is refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "volume")]
-pub struct SetVolume {
-    audio: Audio,
-    volume: Volume,
-}
-
-impl Command for SetVolume {
-    type Input = Percent;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Set the audio output volume";
-
-    async fn call(&self, level: Percent) -> omega::Result<()> {
-        if !self.audio.has_reading() {
-            return Err(omega::Error::invalid("Audio unavailable"));
-        }
-
-        self.volume.set(level).await
-    }
-}
-
-/// Set the output's audible state absolutely; unavailable audio is refused.
-#[derive(Debug, omega::Command)]
-#[omega(name = "audible")]
-pub struct SetAudible {
-    audio: Audio,
-    volume: Volume,
-}
-
-impl Command for SetAudible {
-    type Input = bool;
-    type Output = ();
-
-    const DESCRIPTION: &'static str = "Enable or mute the audio output";
-
-    async fn call(&self, audible: bool) -> omega::Result<()> {
-        if !self.audio.has_reading() {
-            return Err(omega::Error::invalid("Audio unavailable"));
-        }
-
-        self.volume.set_muted(!audible).await
-    }
-}
-
 struct Output;
 
 impl Output {
@@ -196,13 +159,9 @@ impl Output {
     }
 }
 
-/// Register the two surfaces and typed output controls.
+/// Register the audio surfaces.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!()
-        .surface(Indicator)
-        .surface(Panel)
-        .command::<SetVolume>()
-        .command::<SetAudible>()
+    omega::plugin!().surface(Indicator).surface(Panel)
 }
 
 #[cfg(test)]

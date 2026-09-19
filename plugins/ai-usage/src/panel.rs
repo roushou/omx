@@ -29,12 +29,18 @@ pub enum Message {
     Select(String),
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _refresh: omega::command::Caller<Refresh>,
+}
+
 impl Surface for Panel {
     type Model = Model;
     type Message = Message;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, model: &mut Model, message: Message, _: &()) -> Task<Message> {
+    fn update(&self, model: &mut Model, message: Message, _: &Self::Effects) -> Task<Message> {
         match message {
             Message::Select(value) => {
                 if let Ok(id) = ProviderId::parse(&value)

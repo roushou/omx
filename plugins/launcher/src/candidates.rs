@@ -175,11 +175,9 @@ impl From<Application> for Candidate {
 pub(crate) struct Sources;
 impl Sources {
     fn available<C: omega::Command>(catalogue: &[Available], command: CommandRef<C>) -> bool {
-        catalogue.iter().any(|entry| {
-            entry.available
-                && entry.address.plugin.as_str() == command.plugin()
-                && entry.address.command.as_str() == command.name()
-        })
+        catalogue
+            .iter()
+            .any(|entry| entry.available && entry.address.command.as_str() == command.name())
     }
     pub(crate) fn collect(
         apps: Vec<Application>,
@@ -188,7 +186,7 @@ impl Sources {
         bluetooth: &Bluetooth,
     ) -> Vec<Candidate> {
         let mut entries: Vec<_> = apps.into_iter().map(Candidate::from).collect();
-        if Self::available(catalogue, audio::SetAudible) {
+        if Self::available(catalogue, audio_commands::SetAudible) {
             entries.push(Candidate::action(
                 Action::Audible(false),
                 "Mute sound".into(),
@@ -201,14 +199,14 @@ impl Sources {
             ));
         }
         for level in [25, 50, 75] {
-            if Self::available(catalogue, audio::SetVolume) {
+            if Self::available(catalogue, audio_commands::SetVolume) {
                 entries.push(Candidate::action(
                     Action::Volume(level),
                     format!("Set volume to {level}%"),
                     "Adjust audio output volume",
                 ));
             }
-            if Self::available(catalogue, display::SetBrightness) {
+            if Self::available(catalogue, display_commands::SetBrightness) {
                 entries.push(Candidate::action(
                     Action::Brightness(level),
                     format!("Set brightness to {level}%"),
@@ -217,21 +215,21 @@ impl Sources {
             }
         }
         for player in media.players() {
-            if player.can_play() && Self::available(catalogue, media::Play) {
+            if player.can_play() && Self::available(catalogue, media_commands::Play) {
                 entries.push(Candidate::action(
                     Action::Play(player.id().clone()),
                     format!("Play {}", player.identity()),
                     "Start music or media playback",
                 ));
             }
-            if player.can_pause() && Self::available(catalogue, media::Pause) {
+            if player.can_pause() && Self::available(catalogue, media_commands::Pause) {
                 entries.push(Candidate::action(
                     Action::Pause(player.id().clone()),
                     format!("Pause {}", player.identity()),
                     "Pause music or media playback",
                 ));
             }
-            if player.can_go_next() && Self::available(catalogue, media::Next) {
+            if player.can_go_next() && Self::available(catalogue, media_commands::Next) {
                 entries.push(Candidate::action(
                     Action::Next(player.id().clone()),
                     format!("Next track in {}", player.identity()),
@@ -240,13 +238,15 @@ impl Sources {
             }
         }
         for device in bluetooth.known_devices() {
-            if device.is_connected() && Self::available(catalogue, bluetooth::Disconnect) {
+            if device.is_connected() && Self::available(catalogue, bluetooth_commands::Disconnect) {
                 entries.push(Candidate::action(
                     Action::Disconnect(device.id().clone()),
                     format!("Disconnect {}", device.name()),
                     "Disconnect a Bluetooth device",
                 ));
-            } else if device.can_connect() && Self::available(catalogue, bluetooth::Connect) {
+            } else if device.can_connect()
+                && Self::available(catalogue, bluetooth_commands::Connect)
+            {
                 entries.push(Candidate::action(
                     Action::Connect(device.id().clone()),
                     format!("Connect {}", device.name()),

@@ -34,7 +34,8 @@ processes, surface state, and shared components fit together.
 
 | Directory             | Contents                                               |
 | --------------------- | ------------------------------------------------------ |
-| `plugins/<name>/src/` | Plugin surfaces, commands, tests, and preview cases    |
+| `plugins/<name>/src/` | Plugin surfaces, tests, and preview cases              |
+| `commands/<domain>/`  | Command implementations and host declarations          |
 | `crates/desktop-ui/`  | Shared headings, sections, detail rows, and controls   |
 | `system/`             | Bar layout, plugin placements, settings, and schedules |
 
@@ -87,7 +88,7 @@ omega status
 `omega check` doesn't activate a build. `omega build --wait` does change the live
 configuration. Use previews first if you only need to inspect layout.
 
-## Add a plugin or library
+## Add a plugin, command host, or library
 
 With `OMEGA_CONFIG_DIR` pointing to this repository:
 
@@ -98,6 +99,16 @@ omega new example
 The CLI creates `plugins/example` and adds the dependency to `system/Cargo.toml`.
 Workspace member globs pick up the new crate. Add its placement to
 [system/src/main.rs](system/src/main.rs); the CLI doesn't edit the bar layout.
+
+For a command host:
+
+```sh
+omega new example-commands --command-host
+```
+
+The CLI creates a reusable library and executable in `commands/example-commands/`
+and links it to `system`. Add the printed `.command_host(...)` call to the
+system document. The starter `example-commands.echo` command accepts text.
 
 For a shared library:
 

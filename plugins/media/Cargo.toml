@@ -8,6 +8,7 @@ workspace = true
 
 [dependencies]
 desktop-ui = { path = "../../crates/desktop-ui" }
+media-commands = { path = "../../commands/media" }
 omega = { workspace = true }
 
 [dev-dependencies]

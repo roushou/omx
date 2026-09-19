@@ -1,10 +1,12 @@
 //! Numbered workspace buttons with compositor-owned focus and occupancy.
 
+use workspaces_commands::Select;
+
 mod slots;
 
 use omega::{
-    Command, Surface, View,
-    platform::desktop::{WorkspaceControl, WorkspaceIndex, Workspaces},
+    Surface, View,
+    platform::desktop::Workspaces,
     surface::{Events, Task},
     ui::{Button, Column, Glyph, Icon, Row},
 };
@@ -41,12 +43,18 @@ pub struct Indicator {
     settings: Settings,
 }
 
+/// Command dependencies used by this surface's bindings.
+#[derive(Debug, omega::Effects)]
+pub struct CommandEffects {
+    _select: omega::command::Caller<Select>,
+}
+
 impl Surface for Indicator {
     type Model = ();
     type Message = Infallible;
-    type Effects = ();
+    type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &()) -> Task<Infallible> {
+    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
         match message {}
     }
 
@@ -98,26 +106,9 @@ impl Surface for Indicator {
     }
 }
 
-/// Focus a numbered workspace, creating it if the compositor supports it.
-/// Does not require a current reading or optimistically change the highlight.
-#[derive(Debug, omega::Command)]
-#[omega(name = "select")]
-pub struct Select {
-    control: WorkspaceControl,
-}
-
-impl Command for Select {
-    type Input = WorkspaceIndex;
-    type Output = ();
-
-    async fn call(&self, index: WorkspaceIndex) -> omega::Result<()> {
-        self.control.switch_to(index).await
-    }
-}
-
-/// Register the indicator and typed workspace-selection command.
+/// Register the workspace indicator.
 pub fn plugin() -> omega::Plugin {
-    omega::plugin!().surface(Indicator).command::<Select>()
+    omega::plugin!().surface(Indicator)
 }
 
 #[cfg(test)]
