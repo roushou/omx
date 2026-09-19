@@ -2,6 +2,8 @@
 
 An [Omarchy](https://omarchy.org/) desktop configuration written in Rust with [Omega](https://github.com/roushou/omega).
 
+https://github.com/user-attachments/assets/81545164-643f-47ec-9359-6bb68bf7d15d
+
 Eleven plugins cover an app and command launcher, workspaces, a calendar, device controls,
 media playback, system stats, and AI usage. Omarchy's menu and system tray stay
 in the bar. Layout and plugin settings live in Rust; colors and fonts follow your
