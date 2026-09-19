@@ -321,7 +321,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -848,9 +848,9 @@ dependencies = [
 
 [[package]]
 name = "omega-derive"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cd0d32836d9b0de2872ccb7af16eb73d78e24412a76d1cd1e705ae03bd234ea"
+checksum = "a879cf292dce40b0cc1cd99f72a77f4c4b19e8716addedcca1088e8248e01902"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -859,9 +859,9 @@ dependencies = [
 
 [[package]]
 name = "omega-document"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef5ab3bc94233ef4fb884536059f1a90b44e32c416556b6018d96b8841dce899"
+checksum = "a7630555c4f90cffe433b4bf0c4d7383083309df229caddadf3274486a445d46"
 dependencies = [
  "omega-host",
  "omega-proto",
@@ -872,9 +872,9 @@ dependencies = [
 
 [[package]]
 name = "omega-host"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9458741d96095b81263e964b8053fd97e48057f5efbef4cedbe450be108a8f8d"
+checksum = "818735e4bbe180452e1aa3bdc5f91c0ddb21036d40726c940369469eb4627675"
 dependencies = [
  "cargo_metadata",
  "libc",
@@ -889,15 +889,15 @@ dependencies = [
 
 [[package]]
 name = "omega-keyboard"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "858bbece24dd4603e8eaeb60f6ce20e0f817b1653a888c249f901a85aba01aa5"
+checksum = "2f7986442788a3e030e53ac1823dc2b3240d6905b492abb0279cc892c19c9a4b"
 
 [[package]]
 name = "omega-omarchy"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18c9015dba7ebb954bca8c87602010ab8dcfe38b9bfed8be807efba898304afa"
+checksum = "81387b312657694d648dea98cef14c0d41cc7e2c78de0b587dcc14d3e07565ba"
 dependencies = [
  "anyhow",
  "omega-document",
@@ -912,9 +912,9 @@ dependencies = [
 
 [[package]]
 name = "omega-preview"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd5b63a68714cfdeac2739037f081d2fefd582d6bbfbbd6ff7fc95e560cbe823"
+checksum = "ad86b4c175231ed4076b9275aa621078b8544bd2718b1283247fe9f9a681c5c3"
 dependencies = [
  "omega-proto",
  "omega-rs",
@@ -924,9 +924,9 @@ dependencies = [
 
 [[package]]
 name = "omega-proto"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9b16bdf9dd395fce4a6e3d1c7dffc0443fc57341b65255880be8f5df6aea499"
+checksum = "56761a0549402c5ca57da2f4e220961501e63cb531abd581008682104deb0423"
 dependencies = [
  "bytes",
  "futures-util",
@@ -947,9 +947,9 @@ dependencies = [
 
 [[package]]
 name = "omega-renderer"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bb43f8a07fe4cb80739a46a7c56a1f8ae8195d04c409fc472a4816491312b8a"
+checksum = "488fe65408a46923f2d5da340e2fcd0370622503eed7ed234412256e4b3f0143"
 dependencies = [
  "omega-proto",
  "sha2",
@@ -957,13 +957,15 @@ dependencies = [
 
 [[package]]
 name = "omega-rs"
-version = "0.3.9"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c4242565683e86a1608d2e54733a63156a3074996c5030db95cf2eae26b7438"
+checksum = "a6f3f35a3889710ae18af25885d6d21249f3f2ff429ba255d96a0c7961f02e19"
 dependencies = [
  "omega-derive",
  "omega-keyboard",
  "omega-proto",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
 ]
@@ -1233,7 +1235,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1374,7 +1376,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1646,7 +1648,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2282,23 +2284,3 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
-
-[[patch.unused]]
-name = "omega-document"
-version = "0.4.0"
-
-[[patch.unused]]
-name = "omega-omarchy"
-version = "0.4.0"
-
-[[patch.unused]]
-name = "omega-preview"
-version = "0.4.0"
-
-[[patch.unused]]
-name = "omega-proto"
-version = "0.4.0"
-
-[[patch.unused]]
-name = "omega-rs"
-version = "0.4.0"
