@@ -4,7 +4,7 @@ use crate::{
 };
 mod sections;
 
-use desktop_ui::PanelHeader;
+use omega::ui::PanelHeader;
 use omega::{
     Surface, View,
     record::Watch,

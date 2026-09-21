@@ -1,7 +1,7 @@
 mod wireless;
 
 use super::{NetworkIcon, Settings};
-use desktop_ui::{Detail, PanelHeader, Section};
+use omega::ui::{Detail, PanelHeader, Section};
 use omega::{
     Surface, View,
     platform::network::{Network, Throughput, Vpn, Wifi, WifiControl, WifiPhase},

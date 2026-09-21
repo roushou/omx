@@ -7,7 +7,6 @@ publish.workspace = true
 [dependencies]
 ai-usage-commands = { path = "../../commands/ai-usage" }
 chrono = "0.4"
-desktop-ui = { path = "../../crates/desktop-ui" }
 omega.workspace = true
 
 [dev-dependencies]

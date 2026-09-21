@@ -2,7 +2,7 @@
 
 use display_commands::SetBrightness;
 
-use desktop_ui::{ItemRow, LevelControl, PanelHeader};
+use omega::ui::{ItemRow, LevelControl, PanelHeader};
 use omega::{
     Percent, Surface, View,
     platform::desktop::{Backlight, Monitors},

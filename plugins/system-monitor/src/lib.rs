@@ -1,6 +1,6 @@
 //! Read-only CPU, memory, filesystem, and thermal status.
 
-use desktop_ui::{Detail, LabelledControl, PanelHeader, Section};
+use omega::ui::{Detail, Labelled, PanelHeader, Section};
 use omega::{
     Percent, Surface, View,
     platform::system::{Disk, Memory, System, Thermals},
@@ -226,7 +226,7 @@ struct Meters;
 
 impl Meters {
     fn usage(label: &str, level: Percent) -> View {
-        LabelledControl::new(
+        Labelled::new(
             Text::new(label).muted(),
             Text::new(level),
             Progress::new(level),
@@ -240,7 +240,7 @@ impl Meters {
             Some(share) => Progress::new(share).into(),
             None => View::empty(),
         };
-        LabelledControl::new(
+        Labelled::new(
             Text::new(label).muted(),
             Text::new(format!("{} / {}", memory.used(), memory.total())),
             progress,

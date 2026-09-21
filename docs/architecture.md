@@ -16,7 +16,7 @@ supervision, and renderer internals are documented in
 | [system/src/main.rs](../system/src/main.rs)         | Desired bar layout, placements, settings, and schedules |
 | `commands/<domain>/`                                | Reusable command types and persistent host binaries     |
 | `plugins/<name>/`                                   | One plugin's views, state, and behavior                 |
-| [crates/desktop-ui](../crates/desktop-ui/README.md) | Reusable panel layouts                                  |
+| `crates/typesafe` | Semantic-search client |
 
 [Cargo.toml](../Cargo.toml) discovers `plugins/*`, `commands/*`, and `crates/*` members.
 Membership under `plugins/` declares a runnable plugin. A library is linked into
@@ -164,7 +164,7 @@ run the collector, so preview cases can supply synthetic snapshots directly.
 
 ## Shared UI components
 
-[desktop-ui](../crates/desktop-ui/README.md) contains headings, sections,
+`omega::ui::content` provides headings, sections,
 detail rows, and labelled controls. Components accept views, values, and action
 bindings. They don't fetch readings, decide device policy, or own panel models.
 
@@ -188,6 +188,6 @@ They use the same surface implementation with supplied data. The
 normal panel, password entry, VPN status, and missing readings.
 
 Keep configuration composition in `system`, plugin behavior in `plugins`, and
-shared layouts in `desktop-ui`. Changes to general service APIs or renderer
+shared layouts in `omega::ui::content`. Changes to general service APIs or renderer
 behavior belong in Omega. See [Contributing](../CONTRIBUTING.md) for the development
 workflow and checks.

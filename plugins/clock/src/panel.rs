@@ -4,7 +4,7 @@ use super::{
     reading::Reading,
 };
 use chrono::Datelike;
-use desktop_ui::{LabelledControl, PanelHeader};
+use omega::ui::{Labelled, PanelHeader};
 use omega::{
     Percent, Surface, View,
     keyboard::{Chord, Key, Keymap},
@@ -137,7 +137,7 @@ impl Panel {
 
     fn year_progress(date: chrono::NaiveDate) -> View {
         let elapsed = Percent::of(Year::progress(date));
-        LabelledControl::new(
+        Labelled::new(
             Text::new(date.year()).muted(),
             Text::new(elapsed).muted().key("year-share"),
             Progress::new(elapsed)

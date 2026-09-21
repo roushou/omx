@@ -9,7 +9,6 @@ workspace = true
 [dependencies]
 audio-commands = { path = "../../commands/audio" }
 bluetooth-commands = { path = "../../commands/bluetooth" }
-desktop-ui = { path = "../../crates/desktop-ui" }
 display-commands = { path = "../../commands/display" }
 media-commands = { path = "../../commands/media" }
 omega = { workspace = true }

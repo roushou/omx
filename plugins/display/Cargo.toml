@@ -7,7 +7,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-desktop-ui = { path = "../../crates/desktop-ui" }
 display-commands = { path = "../../commands/display" }
 omega = { workspace = true }
 

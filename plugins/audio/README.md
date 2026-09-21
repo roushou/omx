@@ -42,4 +42,4 @@ cargo test -p audio
 Use `omega preview audio --list` for all cases. The
 [UI](src/lib.rs) reads audio state and calls
 [audio commands](../../commands/audio/src/commands.rs) for changes. The slider
-layout comes from [desktop-ui](../../crates/desktop-ui/README.md).
+layout comes from the `omega::ui` content components.

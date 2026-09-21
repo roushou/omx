@@ -8,7 +8,6 @@ workspace = true
 
 [dependencies]
 bluetooth-commands = { path = "../../commands/bluetooth" }
-desktop-ui = { path = "../../crates/desktop-ui" }
 omega = { workspace = true }
 
 [dev-dependencies]

@@ -4,7 +4,7 @@ mod candidates;
 mod favorites;
 mod search;
 use candidates::{Candidate, CandidateId, Sources};
-use desktop_ui::{ItemRow, PanelHeader};
+use omega::ui::{ItemRow, PanelHeader};
 use favorites::{AllFavorites, Favorites};
 use omega::command::{Available, Caller, Commands};
 use omega::platform::{audio::Media, bluetooth::Bluetooth};

@@ -1,6 +1,6 @@
 use super::Format;
 use crate::data::Provider;
-use desktop_ui::{Detail, LabelledControl, Section};
+use omega::ui::{Detail, Labelled, Section};
 use omega::{
     Percent, View,
     ui::{Column, Component, Header, Progress, Row, Size, Text},
@@ -154,7 +154,7 @@ impl ProviderSections<'_> {
                     .heading(Header::new("Last seven days"))
                     .gap(12)
                     .children(provider.days.iter().map(|day| {
-                        LabelledControl::new(
+                        Labelled::new(
                             Text::new(&day.date).muted(),
                             Text::new(Format::tokens(day.message_count)),
                             Progress::new(Percent::of(day.message_count as f64 / peak)),
@@ -180,7 +180,7 @@ impl ProviderSections<'_> {
                     .heading(Header::new("Top models · recorded history"))
                     .gap(12)
                     .children(provider.models.iter().take(8).map(|model| {
-                        LabelledControl::new(
+                        Labelled::new(
                             Text::new(&model.name).muted(),
                             Text::new(Format::tokens(model.total())),
                             Progress::new(Percent::of(model.total() as f64 / peak)),

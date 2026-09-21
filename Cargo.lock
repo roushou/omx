@@ -17,7 +17,6 @@ version = "0.1.0"
 dependencies = [
  "ai-usage-commands",
  "chrono",
- "desktop-ui",
  "omega-preview",
  "omega-rs",
  "serde_json",
@@ -62,7 +61,6 @@ name = "audio"
 version = "0.1.0"
 dependencies = [
  "audio-commands",
- "desktop-ui",
  "omega-preview",
  "omega-proto",
  "omega-rs",
@@ -108,7 +106,6 @@ name = "bluetooth"
 version = "0.1.0"
 dependencies = [
  "bluetooth-commands",
- "desktop-ui",
  "omega-preview",
  "omega-rs",
  "tokio",
@@ -217,7 +214,6 @@ name = "clock"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "desktop-ui",
  "omega-preview",
  "omega-rs",
 ]
@@ -257,13 +253,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "desktop-ui"
-version = "0.1.0"
-dependencies = [
- "omega-rs",
-]
-
-[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -277,7 +266,6 @@ dependencies = [
 name = "display"
 version = "0.1.0"
 dependencies = [
- "desktop-ui",
  "display-commands",
  "omega-preview",
  "omega-rs",
@@ -747,7 +735,6 @@ version = "0.1.0"
 dependencies = [
  "audio-commands",
  "bluetooth-commands",
- "desktop-ui",
  "display-commands",
  "media-commands",
  "omega-preview",
@@ -790,7 +777,6 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 name = "media"
 version = "0.1.0"
 dependencies = [
- "desktop-ui",
  "media-commands",
  "omega-preview",
  "omega-rs",
@@ -831,9 +817,18 @@ checksum = "1d87ecb2933e8aeadb3e3a02b828fed80a7528047e68b4f424523a0981a3a084"
 name = "network"
 version = "0.1.0"
 dependencies = [
- "desktop-ui",
  "omega-preview",
  "omega-rs",
+ "tokio",
+]
+
+[[package]]
+name = "notes"
+version = "0.1.0"
+dependencies = [
+ "omega-preview",
+ "omega-rs",
+ "serde",
  "tokio",
 ]
 
@@ -849,8 +844,6 @@ dependencies = [
 [[package]]
 name = "omega-derive"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a879cf292dce40b0cc1cd99f72a77f4c4b19e8716addedcca1088e8248e01902"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -860,8 +853,6 @@ dependencies = [
 [[package]]
 name = "omega-document"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7630555c4f90cffe433b4bf0c4d7383083309df229caddadf3274486a445d46"
 dependencies = [
  "omega-host",
  "omega-proto",
@@ -873,8 +864,6 @@ dependencies = [
 [[package]]
 name = "omega-host"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "818735e4bbe180452e1aa3bdc5f91c0ddb21036d40726c940369469eb4627675"
 dependencies = [
  "cargo_metadata",
  "libc",
@@ -890,14 +879,10 @@ dependencies = [
 [[package]]
 name = "omega-keyboard"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f7986442788a3e030e53ac1823dc2b3240d6905b492abb0279cc892c19c9a4b"
 
 [[package]]
 name = "omega-omarchy"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81387b312657694d648dea98cef14c0d41cc7e2c78de0b587dcc14d3e07565ba"
 dependencies = [
  "anyhow",
  "omega-document",
@@ -913,8 +898,6 @@ dependencies = [
 [[package]]
 name = "omega-preview"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad86b4c175231ed4076b9275aa621078b8544bd2718b1283247fe9f9a681c5c3"
 dependencies = [
  "omega-proto",
  "omega-rs",
@@ -925,8 +908,6 @@ dependencies = [
 [[package]]
 name = "omega-proto"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56761a0549402c5ca57da2f4e220961501e63cb531abd581008682104deb0423"
 dependencies = [
  "bytes",
  "futures-util",
@@ -948,8 +929,6 @@ dependencies = [
 [[package]]
 name = "omega-renderer"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "488fe65408a46923f2d5da340e2fcd0370622503eed7ed234412256e4b3f0143"
 dependencies = [
  "omega-proto",
  "sha2",
@@ -958,8 +937,6 @@ dependencies = [
 [[package]]
 name = "omega-rs"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6f3f35a3889710ae18af25885d6d21249f3f2ff429ba255d96a0c7961f02e19"
 dependencies = [
  "omega-derive",
  "omega-keyboard",
@@ -1034,7 +1011,6 @@ dependencies = [
 name = "power"
 version = "0.1.0"
 dependencies = [
- "desktop-ui",
  "omega-preview",
  "omega-rs",
  "power-commands",
@@ -1633,7 +1609,6 @@ dependencies = [
 name = "system-monitor"
 version = "0.1.0"
 dependencies = [
- "desktop-ui",
  "omega-preview",
  "omega-rs",
 ]

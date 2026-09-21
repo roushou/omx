@@ -36,7 +36,7 @@ processes, surface state, and shared components fit together.
 | --------------------- | ------------------------------------------------------ |
 | `plugins/<name>/src/` | Plugin surfaces, tests, and preview cases              |
 | `commands/<domain>/`  | Command implementations and host declarations          |
-| `crates/desktop-ui/`  | Shared headings, sections, detail rows, and controls   |
+| `crates/typesafe/`  | Semantic-search client |
 | `system/`             | Bar layout, plugin placements, settings, and schedules |
 
 Start with the plugin's README. It describes the controls, defaults, and current
@@ -63,7 +63,7 @@ state; send changes through commands or surface effects. Use reported device sta
 to confirm changes, and show request failures where the user can act on them.
 Missing readings should appear as unavailable rather than zero.
 
-Keep behavior specific to a plugin in that plugin. Move a layout to `desktop-ui`
+Keep behavior specific to a plugin in that plugin. Move a layout into `omega::ui::content`
 when several plugins need it, and let callers provide its content and bindings.
 New system APIs or renderer behavior belong in Omega.
 

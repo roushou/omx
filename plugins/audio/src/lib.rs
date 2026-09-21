@@ -2,7 +2,7 @@
 
 use audio_commands::{SetAudible, SetVolume};
 
-use desktop_ui::{LevelControl, PanelHeader};
+use omega::ui::{LevelControl, PanelHeader};
 use omega::{
     Percent, Surface, View,
     platform::audio::Audio,

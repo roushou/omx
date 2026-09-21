@@ -2,7 +2,7 @@
 
 use power_commands::ChangeProfile;
 
-use desktop_ui::{Detail, PanelHeader, Section};
+use omega::ui::{Detail, PanelHeader, Section};
 use omega::{
     Percent, Surface, View,
     platform::power::{Battery, Power, PowerProfile, PowerProfiles, ProfileLabel, Status},

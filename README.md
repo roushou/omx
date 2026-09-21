@@ -4,8 +4,9 @@ An [Omarchy](https://omarchy.org/) desktop configuration written in Rust with [O
 
 https://github.com/user-attachments/assets/81545164-643f-47ec-9359-6bb68bf7d15d
 
-Eleven plugins cover an app and command launcher, workspaces, a calendar, device controls,
-media playback, system stats, and AI usage. Omarchy's menu and system tray stay
+Twelve plugins cover an app and command launcher, workspaces, a calendar, device
+controls, media playback, system stats, a notes scratchpad, and AI usage. Omarchy's
+menu and system tray stay
 in the bar. Layout and plugin settings live in Rust; colors and fonts follow your
 Omarchy theme.
 
@@ -15,7 +16,7 @@ Omarchy theme.
 
 - Omarchy
 - Rust 1.88+
-- Omega 0.3.9+
+- Omega 0.4.0+
 
 See [Omega's installation instructions](https://github.com/roushou/omega) if you
 haven't set it up yet.
@@ -59,6 +60,7 @@ Click a bar indicator to open its panel. Workspace buttons switch directly.
 | [Media](plugins/media/README.md)                   | Control playback for individual MPRIS players              |
 | [AI usage](plugins/ai-usage/README.md)             | Subscription allowances, token history, and prepaid credit |
 | [System monitor](plugins/system-monitor/README.md) | CPU, memory, storage, temperatures, and fans               |
+| [Notes](plugins/notes/README.md)                   | A persistent scratchpad shown as an anchored overlay       |
 
 Each plugin's README lists its settings, supported controls, and preview commands.
 
@@ -78,10 +80,22 @@ and persist across daemon restarts.
 See the [launcher guide](plugins/launcher/README.md#replace-the-apps-shortcut)
 to bind it to Super+Alt+Space. Keybindings are configured separately from the bar.
 
-This configuration uses Omega's unreleased storage and command-host APIs. Development requires
-linking the matching Omega checkout with `omega link /path/to/omega` and
-running its daemon with protocol version 2. Rebuild plugins and reinstall the renderer
-when updating Omega. Published Omega 0.3.9 cannot build this launcher yet.
+### Standalone notes
+
+Summon the scratchpad anchored to the bottom-right:
+
+```sh
+omega present notes editor --overlay --anchor bottom-right --margin 24 \
+  --dismiss-on-outside --width 440 --height 360
+```
+
+Escape or a click outside dismisses it, and the note autosaves. See the
+[notes guide](plugins/notes/README.md) for the compositor binding.
+
+This configuration targets Omega 0.4.0, which provides the storage and command-host
+APIs its launcher uses. To develop against an unreleased Omega checkout, link it
+with `omega link /path/to/omega`; rebuild plugins and reinstall the renderer whenever
+Omega changes, and use `omega link --published` to return to the published crates.
 
 ## Configuration
 
@@ -104,8 +118,7 @@ settings apply to both the indicator and its panel.
 To reuse a plugin in another Omega configuration, copy its directory and its
 workspace dependencies, add it to your system crate's dependencies, and place its
 surfaces. For plugins that call commands, also register their
-[command host](commands/README.md) in the system document. Most plugins also use
-[desktop-ui](crates/desktop-ui/README.md). AI usage needs the schedule shown
+[command host](commands/README.md) in the system document. Most plugins also use the `omega::ui` content components. AI usage needs the schedule shown
 in [its README](plugins/ai-usage/README.md).
 
 ## Documentation

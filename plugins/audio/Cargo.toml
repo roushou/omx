@@ -8,7 +8,6 @@ workspace = true
 
 [dependencies]
 audio-commands = { path = "../../commands/audio" }
-desktop-ui = { path = "../../crates/desktop-ui" }
 omega = { workspace = true }
 
 [dev-dependencies]

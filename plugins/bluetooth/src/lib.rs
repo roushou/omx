@@ -2,7 +2,7 @@
 
 use bluetooth_commands::{Connect, Disconnect};
 
-use desktop_ui::{ItemRow, PanelHeader};
+use omega::ui::{ItemRow, PanelHeader};
 use omega::{
     Surface, View,
     platform::bluetooth::{Bluetooth, BluetoothDevice, BluetoothStatus},

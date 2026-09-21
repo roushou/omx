@@ -2,7 +2,7 @@
 
 use media_commands::{Next, Pause, Play, Previous};
 
-use desktop_ui::PanelHeader;
+use omega::ui::PanelHeader;
 use omega::{
     Surface, View,
     platform::audio::{Media, Playback, Player, PlayerId},
