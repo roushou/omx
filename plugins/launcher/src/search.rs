@@ -1,7 +1,10 @@
 //! Deterministic local search over the platform's bounded catalogue.
+//! Ranking lives in `omega::surface::Search`; this module adapts it to
+//! candidates, launcher selection, and TypeSafe semantic ranking.
 
 use crate::candidates::{Candidate, CandidateId};
 use omega::platform::applications::ApplicationId;
+use omega::surface::{Matchable, Search as SurfaceSearch};
 use std::collections::BTreeSet;
 
 pub(crate) struct Matches<'a> {
@@ -23,6 +26,31 @@ impl Matches<'_> {
     }
 }
 
+impl Matchable for Candidate {
+    fn id(&self) -> &str {
+        match self.id() {
+            CandidateId::Application(id) => id.as_str(),
+            CandidateId::Action(id) => id.as_str(),
+        }
+    }
+
+    fn name(&self) -> &str {
+        self.name()
+    }
+
+    fn generic(&self) -> &str {
+        self.generic_name()
+    }
+
+    fn keywords(&self) -> &[String] {
+        self.keywords()
+    }
+
+    fn description(&self) -> &str {
+        self.description()
+    }
+}
+
 pub(crate) struct Search;
 
 impl Search {
@@ -32,62 +60,13 @@ impl Search {
         limit: u8,
         favorites: &BTreeSet<ApplicationId>,
     ) -> Matches<'a> {
-        let query = query.trim().to_lowercase();
-        let tokens: Vec<_> = query.split_whitespace().collect();
-        let mut matches = Vec::new();
-
-        for app in entries {
-            let name = app.name().to_lowercase();
-            let generic = app.generic_name().to_lowercase();
-            let keywords = app.keywords().join(" ").to_lowercase();
-            let description = app.description().to_lowercase();
-            let id = app.id().to_string().to_lowercase();
-            let mut score = 0usize;
-            let mut matched = true;
-
-            for token in &tokens {
-                let rank = if name.starts_with(token) {
-                    0
-                } else if name.contains(token) {
-                    1
-                } else if generic.contains(token) || keywords.contains(token) {
-                    2
-                } else if description.contains(token) {
-                    3
-                } else if id.contains(token) {
-                    4
-                } else if let Some(cost) = Self::fuzzy(token, &name) {
-                    10 + cost
-                } else {
-                    matched = false;
-                    break;
-                };
-                score += rank;
-            }
-
-            if matched {
-                let priority = if query.is_empty() || name == query {
-                    0
-                } else if name.starts_with(&query) {
-                    1
-                } else {
-                    2
-                };
-
-                let personal = query.is_empty() && !app.is_favorite(favorites);
-                matches.push((priority, score, personal, name, app));
-            }
+        let ranked = SurfaceSearch::<Candidate>::new(query)
+            .limit(limit)
+            .find(entries, |candidate| candidate.is_favorite(favorites));
+        Matches {
+            items: ranked.items,
+            total: ranked.total,
         }
-
-        matches
-            .sort_by(|a, b| (a.0, a.1, a.2, &a.3, a.4.id()).cmp(&(b.0, b.1, b.2, &b.3, b.4.id())));
-        let total = matches.len();
-        let items = matches
-            .into_iter()
-            .take(usize::from(limit.clamp(1, 100)))
-            .map(|(_, _, _, _, app)| app)
-            .collect();
-        Matches { items, total }
     }
 
     pub(crate) fn semantic<'a>(
@@ -117,24 +96,5 @@ impl Search {
                 .collect(),
             total,
         }
-    }
-
-    fn fuzzy(token: &str, name: &str) -> Option<usize> {
-        let mut wanted = token.chars();
-        let mut next = wanted.next()?;
-        let mut first = None;
-        let mut matched = 0;
-        for (index, character) in name.chars().enumerate() {
-            if character != next {
-                continue;
-            }
-            first.get_or_insert(index);
-            matched += 1;
-            match wanted.next() {
-                Some(character) => next = character,
-                None => return Some(index + 1 - matched + first.unwrap_or(0)),
-            }
-        }
-        None
     }
 }
