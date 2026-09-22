@@ -1025,6 +1025,8 @@ dependencies = [
 [[package]]
 name = "omega-derive"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83d0d5f047ade4e916f823e444e842a5496d6995aa40b4961d79669d7078f00d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1034,6 +1036,8 @@ dependencies = [
 [[package]]
 name = "omega-document"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "418aca7499952003811d47c00d042c15550612a26ce3fd8051aef923638fc815"
 dependencies = [
  "omega-host",
  "omega-proto",
@@ -1045,6 +1049,8 @@ dependencies = [
 [[package]]
 name = "omega-host"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5353e5e0c644a280bacb9677bd9c6a8611a3c21222162a3e3e034e51609a33ea"
 dependencies = [
  "cargo_metadata",
  "libc",
@@ -1060,10 +1066,14 @@ dependencies = [
 [[package]]
 name = "omega-keyboard"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adc4d7206f0174e77c2a61581e851b17bfa48db796e79be61b5337f9b3ce2d52"
 
 [[package]]
 name = "omega-omarchy"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bd94c78047e9525c4d513a8fc6fc34bf36912d3fe9a5413341fd6c22dd5a268"
 dependencies = [
  "anyhow",
  "omega-document",
@@ -1079,6 +1089,8 @@ dependencies = [
 [[package]]
 name = "omega-preview"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f03db89e4cefa5b1e45089b88d02170925c2cda291a9f58bf709a4e20f0d811"
 dependencies = [
  "omega-proto",
  "omega-rs",
@@ -1089,6 +1101,8 @@ dependencies = [
 [[package]]
 name = "omega-proto"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ba5216c1d9eca9b9ae066878b0bb33993445534d6115f122829d4d9637aced7"
 dependencies = [
  "bytes",
  "futures-util",
@@ -1110,6 +1124,8 @@ dependencies = [
 [[package]]
 name = "omega-renderer"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb8bfcd67ba86e07f004628107ffad53da1aaa62f7a726c27c7955626ef31d45"
 dependencies = [
  "omega-proto",
  "sha2",
@@ -1118,6 +1134,8 @@ dependencies = [
 [[package]]
 name = "omega-rs"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fdbcb5ed9cc8c5efa1f362a82d2ef90bf0e46e935a3a4dce658ed4a52b1dc01"
 dependencies = [
  "omega-derive",
  "omega-keyboard",
