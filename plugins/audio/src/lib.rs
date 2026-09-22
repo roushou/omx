@@ -5,9 +5,9 @@ use audio_commands::{SetAudible, SetVolume};
 use omega::ui::{LevelControl, PanelHeader};
 use omega::{
     Percent, Surface, View,
-    platform::audio::{Audio, StreamControl, Streams},
+    platform::audio::{Audio, SinkControl, Sinks, StreamControl, Streams},
     surface::{Events, Task},
-    ui::{Column, Component, Glyph, Header, Icon, Row, Section, Separator, Size, Slider, Text, Toggle},
+    ui::{Column, Component, Dropdown, Glyph, Header, Icon, Row, Section, Separator, Size, Slider, Text, Toggle},
 };
 use std::convert::Infallible;
 
@@ -71,6 +71,7 @@ impl Surface for Indicator {
 pub struct Panel {
     audio: Audio,
     streams: Streams,
+    sinks: Sinks,
 }
 
 /// Command dependencies used by this surface's bindings.
@@ -79,6 +80,7 @@ pub struct CommandEffects {
     _set_volume: omega::command::Caller<SetVolume>,
     _set_audible: omega::command::Caller<SetAudible>,
     stream_volume: StreamControl,
+    sink_control: SinkControl,
 }
 
 /// Local behavior for per-stream controls, whose targets are runtime data.
@@ -86,6 +88,7 @@ pub struct CommandEffects {
 pub enum Message {
     StreamVolume { index: u32, level: Percent },
     StreamMute { index: u32, muted: bool },
+    SelectSink { name: String },
     Noop,
 }
 
@@ -105,6 +108,9 @@ impl Surface for Panel {
                 Task::perform(effects.stream_volume.set_muted(index, muted), |_| {
                     Message::Noop
                 })
+            }
+            Message::SelectSink { name } => {
+                Task::perform(effects.sink_control.set_default(name), |_| Message::Noop)
             }
             Message::Noop => Task::none(),
         }
@@ -145,6 +151,24 @@ impl Surface for Panel {
                 }
                 .key("output"),
             );
+
+            let devices = self.sinks.all();
+            if !devices.is_empty() {
+                panel = panel.child(Separator::new());
+                let mut picker = Dropdown::new()
+                    .placeholder("Output device")
+                    .selected(self.audio.default_sink());
+                for sink in devices {
+                    picker = picker.option(sink.name().to_string(), Text::new(sink.description()));
+                }
+                panel = panel.child(
+                    Section::new()
+                        .heading(Header::new("DEVICES"))
+                        .child(picker.on_select(events.on(|name: String| Message::SelectSink {
+                            name,
+                        }))),
+                );
+            }
 
             let streams = self.streams.streams();
             if self.streams.has_reading() && !streams.is_empty() {

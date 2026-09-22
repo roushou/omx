@@ -1,7 +1,7 @@
 use super::{Indicator, Panel};
 use omega::testing::{
     State, SystemTopic,
-    topic::{AudioState, AudioStream, AudioStreamsState},
+    topic::{AudioSinksState, AudioState, AudioStream, AudioStreamsState, SinkInfo},
 };
 use omega_preview::Cases;
 
@@ -16,6 +16,7 @@ impl Fixture {
                 ..Default::default()
             })
             .absent(SystemTopic::AudioStreams)
+            .absent(SystemTopic::AudioSinks)
     }
 
     pub(crate) fn streams() -> State {
@@ -36,6 +37,21 @@ impl Fixture {
             ],
         })
     }
+
+    pub(crate) fn sinks() -> State {
+        Self::output(false).with(AudioSinksState {
+            sinks: vec![
+                SinkInfo {
+                    name: "speakers".into(),
+                    description: "Built-in Audio".into(),
+                },
+                SinkInfo {
+                    name: "headphones".into(),
+                    description: "Headset".into(),
+                },
+            ],
+        })
+    }
 }
 
 #[test]
@@ -45,11 +61,13 @@ fn preview() {
         .surface::<Panel>("output", Fixture::output(false))
         .surface::<Panel>("muted", Fixture::output(true))
         .surface::<Panel>("streams", Fixture::streams())
+        .surface::<Panel>("devices", Fixture::sinks())
         .surface::<Panel>(
             "unavailable",
             State::new()
                 .absent(SystemTopic::Audio)
-                .absent(SystemTopic::AudioStreams),
+                .absent(SystemTopic::AudioStreams)
+                .absent(SystemTopic::AudioSinks),
         )
         .run()
         .unwrap();

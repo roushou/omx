@@ -14,7 +14,8 @@ fn unavailable_audio_has_no_controls() {
     let panel = Drawn::of::<Panel>(
         &State::new()
             .absent(SystemTopic::Audio)
-            .absent(SystemTopic::AudioStreams),
+            .absent(SystemTopic::AudioStreams)
+            .absent(SystemTopic::AudioSinks),
     )
     .unwrap();
 
@@ -30,6 +31,15 @@ fn streams_render_a_slider_and_mute_per_application() {
     assert!(panel.text().contains("APPLICATIONS"));
     assert!(panel.text().contains("vlc"));
     assert!(panel.text().contains("chromium"));
+}
+
+#[test]
+fn the_device_picker_lists_the_available_sinks() {
+    let panel = Drawn::of::<Panel>(&Fixture::sinks()).unwrap();
+
+    assert!(panel.text().contains("DEVICES"));
+    assert!(panel.text().contains("Built-in Audio"));
+    assert!(panel.text().contains("Headset"));
 }
 
 #[test]
