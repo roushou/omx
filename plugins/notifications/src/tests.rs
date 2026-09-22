@@ -24,11 +24,15 @@ fn the_center_shows_an_empty_state_when_nothing_is_raised() {
 fn the_manifest_declares_battery_events_and_the_notify_capability() {
     let manifest = plugin().manifest().unwrap();
 
-    assert!(manifest
-        .events
-        .contains(&(EventKind::EventBatteryLow as i32)));
-    assert!(manifest
-        .events
-        .contains(&(EventKind::EventBatteryCritical as i32)));
+    assert!(
+        manifest
+            .events
+            .contains(&(EventKind::EventBatteryLow as i32))
+    );
+    assert!(
+        manifest
+            .events
+            .contains(&(EventKind::EventBatteryCritical as i32))
+    );
     assert!(manifest.granted().unwrap().contains(&Capability::Notify));
 }

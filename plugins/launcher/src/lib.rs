@@ -4,12 +4,12 @@ mod candidates;
 mod favorites;
 mod search;
 use candidates::{Candidate, CandidateId, Sources};
-use omega::ui::{ItemRow, PanelHeader};
 use favorites::{AllFavorites, Favorites};
 use omega::command::{Available, Caller, Commands};
 use omega::platform::{audio::Media, bluetooth::Bluetooth};
 use omega::storage::{Snapshot, Store, Subscribed};
 use omega::surface::Optional;
+use omega::ui::{ItemRow, PanelHeader};
 use omega::{
     Surface, View,
     keyboard::{Chord, Key, Keymap},

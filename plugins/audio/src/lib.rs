@@ -7,7 +7,10 @@ use omega::{
     Percent, Surface, View,
     platform::audio::{Audio, SinkControl, Sinks, StreamControl, Streams},
     surface::{Events, Task},
-    ui::{Column, Component, Dropdown, Glyph, Header, Icon, Row, Section, Separator, Size, Slider, Text, Toggle},
+    ui::{
+        Column, Component, Dropdown, Glyph, Header, Icon, Row, Section, Separator, Size, Slider,
+        Text, Toggle,
+    },
 };
 use std::convert::Infallible;
 
@@ -161,13 +164,9 @@ impl Surface for Panel {
                 for sink in devices {
                     picker = picker.option(sink.name().to_string(), Text::new(sink.description()));
                 }
-                panel = panel.child(
-                    Section::new()
-                        .heading(Header::new("DEVICES"))
-                        .child(picker.on_select(events.on(|name: String| Message::SelectSink {
-                            name,
-                        }))),
-                );
+                panel = panel.child(Section::new().heading(Header::new("DEVICES")).child(
+                    picker.on_select(events.on(|name: String| Message::SelectSink { name })),
+                ));
             }
 
             let streams = self.streams.streams();
@@ -177,27 +176,22 @@ impl Surface for Panel {
                 for stream in streams {
                     let index = stream.index();
                     let level = stream.volume();
-                    section = section.child(
-                        Row::new()
-                            .gap(10)
-                            .child(Text::new(stream.app()).width(120).muted())
-                            .child(
-                                Slider::new(level)
-                                    .fill_width()
-                                    .on_change(events.on(move |level: Percent| {
-                                        Message::StreamVolume { index, level }
-                                    })),
-                            )
-                            .child(
-                                Toggle::new(!stream.is_muted()).on_change(events.on(
-                                    move |on: bool| Message::StreamMute {
+                    section =
+                        section.child(
+                            Row::new()
+                                .gap(10)
+                                .child(Text::new(stream.app()).width(120).muted())
+                                .child(Slider::new(level).fill_width().on_change(events.on(
+                                    move |level: Percent| Message::StreamVolume { index, level },
+                                )))
+                                .child(Toggle::new(!stream.is_muted()).on_change(
+                                    events.on(move |on: bool| Message::StreamMute {
                                         index,
                                         muted: !on,
-                                    },
-                                )),
-                            )
-                            .key(index.to_string()),
-                    );
+                                    }),
+                                ))
+                                .key(index.to_string()),
+                        );
                 }
                 panel = panel.child(section);
             }

@@ -11,7 +11,9 @@
 
 use omega::platform::notification::{Notification, Notifications, Notify};
 use omega::surface::{Events, Task};
-use omega::ui::{Column, Component, EmptyState, Glyph, Icon, ItemRow, PanelHeader, Section, Size, Text};
+use omega::ui::{
+    Column, Component, EmptyState, Glyph, Icon, ItemRow, PanelHeader, Section, Size, Text,
+};
 use omega::{Reaction, Surface, View};
 use omega_proto::omega::{Event, EventKind};
 use std::convert::Infallible;
@@ -71,7 +73,10 @@ impl Reaction for BatteryAlert {
         };
         let percent = (power.battery_percent * 100.0).round() as u8;
         let (summary, body) = if event.kind == EventKind::EventBatteryCritical as i32 {
-            ("Battery critical", format!("{percent}% remaining — plug in now"))
+            (
+                "Battery critical",
+                format!("{percent}% remaining — plug in now"),
+            )
         } else {
             ("Battery low", format!("{percent}% remaining"))
         };

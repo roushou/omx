@@ -1,7 +1,7 @@
 use super::Center;
 use omega::testing::{State, SystemTopic, topic::NotificationsState};
-use omega_proto::omega::ActiveNotification;
 use omega_preview::Cases;
+use omega_proto::omega::ActiveNotification;
 
 pub(crate) struct Fixture;
 
