@@ -22,6 +22,7 @@ impl System {
             .command_host(power_commands::Host::declaration())?
             .command_host(workspaces_commands::Host::declaration())?
             .command_host(ai_usage_commands::Host::declaration())?
+            .command_host(capture_commands::Host::declaration())?
             .env("OMEGA_HOST", Host::name())
             .schedule(Schedules::every(
                 "ai-usage-poll",

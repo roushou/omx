@@ -60,8 +60,9 @@ omega run audio.audible false
 omega commands
 ```
 
-The seven hosts cover audio, Bluetooth, display brightness, media playback,
-power profiles, workspaces, and AI usage. The AI host also owns the collector
+The eight hosts cover audio, Bluetooth, display brightness, media playback,
+power profiles, workspaces, AI usage, and screen capture (screenshot, OCR, and
+recording). The AI host also owns the collector
 and publishes `Snapshot`; its UI only subscribes and renders. A five-second
 system schedule calls `ai-usage.poll` to publish collection progress.
 

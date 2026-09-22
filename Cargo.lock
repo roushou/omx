@@ -140,6 +140,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "capture-commands"
+version = "0.1.0"
+dependencies = [
+ "omega-rs",
+]
+
+[[package]]
 name = "cargo-platform"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1589,6 +1596,7 @@ dependencies = [
  "audio-commands",
  "bluetooth",
  "bluetooth-commands",
+ "capture-commands",
  "clock",
  "display",
  "display-commands",

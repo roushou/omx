@@ -1,0 +1,13 @@
+[package]
+name = "capture-commands"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[package.metadata.omega]
+kind = "command-host"
+
+[dependencies]
+omega = { workspace = true }

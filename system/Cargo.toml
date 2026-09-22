@@ -13,6 +13,7 @@ audio = { path = "../plugins/audio" }
 audio-commands = { path = "../commands/audio" }
 bluetooth = { path = "../plugins/bluetooth" }
 bluetooth-commands = { path = "../commands/bluetooth" }
+capture-commands = { path = "../commands/capture" }
 clock = { path = "../plugins/clock" }
 display = { path = "../plugins/display" }
 display-commands = { path = "../commands/display" }
