@@ -11,11 +11,25 @@ use omega_proto::omega::set_volume;
 
 #[test]
 fn unavailable_audio_has_no_controls() {
-    let panel = Drawn::of::<Panel>(&State::new().absent(SystemTopic::Audio)).unwrap();
+    let panel = Drawn::of::<Panel>(
+        &State::new()
+            .absent(SystemTopic::Audio)
+            .absent(SystemTopic::AudioStreams),
+    )
+    .unwrap();
 
     assert!(panel.text().contains("Audio unavailable"));
     assert!(panel.first("slider").is_none());
     assert!(panel.first("toggle").is_none());
+}
+
+#[test]
+fn streams_render_a_slider_and_mute_per_application() {
+    let panel = Drawn::of::<Panel>(&Fixture::streams()).unwrap();
+
+    assert!(panel.text().contains("APPLICATIONS"));
+    assert!(panel.text().contains("vlc"));
+    assert!(panel.text().contains("chromium"));
 }
 
 #[test]

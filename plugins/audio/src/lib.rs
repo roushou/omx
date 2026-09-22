@@ -5,9 +5,9 @@ use audio_commands::{SetAudible, SetVolume};
 use omega::ui::{LevelControl, PanelHeader};
 use omega::{
     Percent, Surface, View,
-    platform::audio::Audio,
+    platform::audio::{Audio, StreamControl, Streams},
     surface::{Events, Task},
-    ui::{Column, Component, Glyph, Icon, Row, Separator, Size, Text, Toggle},
+    ui::{Column, Component, Glyph, Header, Icon, Row, Section, Separator, Size, Slider, Text, Toggle},
 };
 use std::convert::Infallible;
 
@@ -66,10 +66,11 @@ impl Surface for Indicator {
     }
 }
 
-/// A mute switch and slider for the default output.
+/// A mute switch and slider for the default output, plus per-application streams.
 #[derive(Debug, omega::Surface)]
 pub struct Panel {
     audio: Audio,
+    streams: Streams,
 }
 
 /// Command dependencies used by this surface's bindings.
@@ -77,18 +78,39 @@ pub struct Panel {
 pub struct CommandEffects {
     _set_volume: omega::command::Caller<SetVolume>,
     _set_audible: omega::command::Caller<SetAudible>,
+    stream_volume: StreamControl,
+}
+
+/// Local behavior for per-stream controls, whose targets are runtime data.
+#[derive(Debug)]
+pub enum Message {
+    StreamVolume { index: u32, level: Percent },
+    StreamMute { index: u32, muted: bool },
+    Noop,
 }
 
 impl Surface for Panel {
     type Model = ();
-    type Message = Infallible;
+    type Message = Message;
     type Effects = CommandEffects;
 
-    fn update(&self, _: &mut (), message: Infallible, _: &Self::Effects) -> Task<Infallible> {
-        match message {}
+    fn update(&self, _: &mut (), message: Message, effects: &Self::Effects) -> Task<Message> {
+        match message {
+            Message::StreamVolume { index, level } => {
+                Task::perform(effects.stream_volume.set_volume(index, level), |_| {
+                    Message::Noop
+                })
+            }
+            Message::StreamMute { index, muted } => {
+                Task::perform(effects.stream_volume.set_muted(index, muted), |_| {
+                    Message::Noop
+                })
+            }
+            Message::Noop => Task::none(),
+        }
     }
 
-    fn render(&self, _: &(), _: &Events<Infallible>) -> View {
+    fn render(&self, _: &(), events: &Events<Message>) -> View {
         let ready = self.audio.has_reading();
         let level = self.audio.volume();
         let muted = self.audio.is_muted();
@@ -123,6 +145,38 @@ impl Surface for Panel {
                 }
                 .key("output"),
             );
+
+            let streams = self.streams.streams();
+            if self.streams.has_reading() && !streams.is_empty() {
+                panel = panel.child(Separator::new());
+                let mut section = Section::new().heading(Header::new("APPLICATIONS"));
+                for stream in streams {
+                    let index = stream.index();
+                    let level = stream.volume();
+                    section = section.child(
+                        Row::new()
+                            .gap(10)
+                            .child(Text::new(stream.app()).width(120).muted())
+                            .child(
+                                Slider::new(level)
+                                    .fill_width()
+                                    .on_change(events.on(move |level: Percent| {
+                                        Message::StreamVolume { index, level }
+                                    })),
+                            )
+                            .child(
+                                Toggle::new(!stream.is_muted()).on_change(events.on(
+                                    move |on: bool| Message::StreamMute {
+                                        index,
+                                        muted: !on,
+                                    },
+                                )),
+                            )
+                            .key(index.to_string()),
+                    );
+                }
+                panel = panel.child(section);
+            }
         } else {
             panel = panel.child(Text::new("Audio unavailable").muted());
         }
