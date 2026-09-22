@@ -1,0 +1,14 @@
+[package]
+name = "custom"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+omega = { workspace = true }
+tokio = { version = "1", features = ["time"] }
+
+[dev-dependencies]
+omega-proto = { workspace = true }
