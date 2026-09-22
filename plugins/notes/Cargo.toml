@@ -1,0 +1,16 @@
+[package]
+name = "notes"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+omega = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "time"] }
+
+[dev-dependencies]
+omega-preview = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt", "test-util"] }
