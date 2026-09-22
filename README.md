@@ -82,11 +82,10 @@ to bind it to Super+Alt+Space. Keybindings are configured separately from the ba
 
 ### Standalone notes
 
-Summon the scratchpad anchored to the bottom-right:
+Summon the scratchpad:
 
 ```sh
-omega present notes editor --overlay --anchor bottom-right --margin 24 \
-  --dismiss-on-outside --width 440 --height 360
+omega present notes editor --overlay --dismiss-on-outside --width 440 --height 360
 ```
 
 Escape or a click outside dismisses it, and the note autosaves. See the

@@ -36,7 +36,7 @@ processes, surface state, and shared components fit together.
 | --------------------- | ------------------------------------------------------ |
 | `plugins/<name>/src/` | Plugin surfaces, tests, and preview cases              |
 | `commands/<domain>/`  | Command implementations and host declarations          |
-| `crates/typesafe/`  | Semantic-search client |
+| `crates/typesafe/`    | Semantic-search client                                 |
 | `system/`             | Bar layout, plugin placements, settings, and schedules |
 
 Start with the plugin's README. It describes the controls, defaults, and current

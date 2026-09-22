@@ -11,12 +11,12 @@ supervision, and renderer internals are documented in
 
 ## Workspace structure
 
-| Location                                            | Responsibility                                          |
-| --------------------------------------------------- | ------------------------------------------------------- |
-| [system/src/main.rs](../system/src/main.rs)         | Desired bar layout, placements, settings, and schedules |
-| `commands/<domain>/`                                | Reusable command types and persistent host binaries     |
-| `plugins/<name>/`                                   | One plugin's views, state, and behavior                 |
-| `crates/typesafe` | Semantic-search client |
+| Location                                    | Responsibility                                          |
+| ------------------------------------------- | ------------------------------------------------------- |
+| [system/src/main.rs](../system/src/main.rs) | Desired bar layout, placements, settings, and schedules |
+| `commands/<domain>/`                        | Reusable command types and persistent host binaries     |
+| `plugins/<name>/`                           | One plugin's views, state, and behavior                 |
+| `crates/typesafe`                           | Semantic-search client                                  |
 
 [Cargo.toml](../Cargo.toml) discovers `plugins/*`, `commands/*`, and `crates/*` members.
 Membership under `plugins/` declares a runnable plugin. A library is linked into

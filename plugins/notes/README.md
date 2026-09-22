@@ -5,11 +5,10 @@ dismiss it; the text autosaves.
 
 ## Summon and dismiss
 
-Bind a compositor shortcut to present the editor anchored to the bottom-right:
+Bind a compositor shortcut to present the editor:
 
 ```sh
-omega present notes editor --overlay --anchor bottom-right --margin 24 \
-  --dismiss-on-outside --width 440 --height 360 \
+omega present notes editor --overlay --dismiss-on-outside --width 440 --height 360 \
   --config '{"rows":10}'
 ```
 
@@ -17,7 +16,7 @@ Add it to `~/.config/hypr/bindings.lua`, replacing any existing binding for the
 chosen chord:
 
 ```lua
-o.bind("SUPER + ALT + N", "Omega notes", [[omega present notes editor --overlay --anchor bottom-right --margin 24 --dismiss-on-outside --width 440 --height 360]])
+o.bind("SUPER + ALT + N", "Omega notes", [[omega present notes editor --overlay --dismiss-on-outside --width 440 --height 360]])
 ```
 
 Repeated invocations reuse the same instance. Escape or a click outside dismisses

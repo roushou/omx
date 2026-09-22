@@ -7,10 +7,10 @@ command via per-placement settings.
 
 ## Settings
 
-| Setting            | Default        | Description                          |
-| ------------------ | -------------- | ------------------------------------ |
-| `command`          | `date +%H:%M`  | Shell command; stdout is the text    |
-| `interval_seconds` | `60`           | Seconds between runs; zero means one |
+| Setting            | Default       | Description                          |
+| ------------------ | ------------- | ------------------------------------ |
+| `command`          | `date +%H:%M` | Shell command; stdout is the text    |
+| `interval_seconds` | `60`          | Seconds between runs; zero means one |
 
 ## Adding it to the bar
 

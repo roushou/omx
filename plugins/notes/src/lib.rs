@@ -1,10 +1,9 @@
-//! A persistent scratchpad, presented as an anchored overlay.
+//! A persistent scratchpad, presented as an overlay.
 //!
 //! Summon it from a compositor binding:
 //!
 //! ```sh
-//! omega present notes editor --overlay --anchor bottom-right --margin 24 \
-//!   --dismiss-on-outside --width 440 --height 360
+//! omega present notes editor --overlay --dismiss-on-outside --width 440 --height 360
 //! ```
 //!
 //! Edits autosave to `omx.notes.scratch` after a short quiet period and when the
