@@ -61,7 +61,7 @@ omega storage show omx.launcher.favorites
 omega storage export omx.launcher.favorites > launcher-favorites.json
 ```
 
-This implementation requires Omega 0.4.0 with storage and command interoperability.
+This implementation requires Omega 0.5.0 with storage and command interoperability.
 
 ## Configuration
 

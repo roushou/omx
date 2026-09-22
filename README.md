@@ -4,8 +4,9 @@ An [Omarchy](https://omarchy.org/) desktop configuration written in Rust with [O
 
 https://github.com/user-attachments/assets/81545164-643f-47ec-9359-6bb68bf7d15d
 
-Twelve plugins cover an app and command launcher, workspaces, a calendar, device
-controls, media playback, system stats, a notes scratchpad, and AI usage. Omarchy's
+Plugins cover an app and command launcher, workspaces, a calendar, device
+controls, media playback, system stats, a notes scratchpad, an image viewer, and
+AI usage. Omarchy's
 menu and system tray stay
 in the bar. Layout and plugin settings live in Rust; colors and fonts follow your
 Omarchy theme.
@@ -16,7 +17,7 @@ Omarchy theme.
 
 - Omarchy
 - Rust 1.88+
-- Omega 0.4.0+
+- Omega 0.5.0+
 
 See [Omega's installation instructions](https://github.com/roushou/omega) if you
 haven't set it up yet.
@@ -61,6 +62,7 @@ Click a bar indicator to open its panel. Workspace buttons switch directly.
 | [AI usage](plugins/ai-usage/README.md)             | Subscription allowances, token history, and prepaid credit |
 | [System monitor](plugins/system-monitor/README.md) | CPU, memory, storage, temperatures, and fans               |
 | [Notes](plugins/notes/README.md)                   | A persistent scratchpad shown as an anchored overlay       |
+| [Image viewer](plugins/image-viewer/README.md)     | Browse a folder of pictures with a thumbnail strip         |
 
 Each plugin's README lists its settings, supported controls, and preview commands.
 
@@ -91,7 +93,20 @@ omega present notes editor --overlay --dismiss-on-outside --width 440 --height 3
 Escape or a click outside dismisses it, and the note autosaves. See the
 [notes guide](plugins/notes/README.md) for the compositor binding.
 
-This configuration targets Omega 0.4.0, which provides the storage and command-host
+### Standalone image viewer
+
+Open a folder of pictures in a window:
+
+```sh
+omega present image-viewer gallery --width 1200 --height 800 \
+  --config '{"path":"/home/me/Pictures"}'
+```
+
+Arrow keys move through the folder and a strip of nearby thumbnails stays
+centred on the selection. See the [image viewer guide](plugins/image-viewer/README.md)
+for the settings and a compositor binding.
+
+This configuration targets Omega 0.5.0, which provides the storage and command-host
 APIs its launcher uses. To develop against an unreleased Omega checkout, link it
 with `omega link /path/to/omega`; rebuild plugins and reinstall the renderer whenever
 Omega changes, and use `omega link --published` to return to the published crates.
