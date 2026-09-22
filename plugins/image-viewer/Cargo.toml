@@ -1,0 +1,24 @@
+[package]
+name = "image-viewer"
+version = "0.1.0"
+publish.workspace = true
+
+[package.edition]
+workspace = true
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = [
+  "bmp",
+  "gif",
+  "ico",
+  "jpeg",
+  "png",
+  "tiff",
+  "webp",
+] }
+omega = { workspace = true }
+
+[dev-dependencies]
+omega-preview = { workspace = true }
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt", "test-util"] }
